@@ -1,5 +1,5 @@
-import { LayoutRectangle } from 'react-native';
-import { Column, Point } from './types';
+import type { LayoutRectangle } from 'react-native';
+import type { Column, Point } from './types';
 
 export const isPointEntered = (point: Point, layout: LayoutRectangle) => {
   const xMin = layout.x;

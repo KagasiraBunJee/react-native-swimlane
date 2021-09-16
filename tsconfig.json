@@ -23,5 +23,6 @@
     "strict": true,
     "target": "esnext",
     "noImplicitAny": false,
+    "importsNotUsedAsValues": "error",
   }
 }

@@ -1,6 +1,6 @@
-import React from 'react';
-import { LayoutRectangle, StyleProp, ViewStyle } from 'react-native';
-import Animated from 'react-native-reanimated';
+import type React from 'react';
+import type { LayoutRectangle, StyleProp, ViewStyle } from 'react-native';
+import type Animated from 'react-native-reanimated';
 
 export type ColumnContentStyle = StyleProp<{
   padding?: ViewStyle['padding'];

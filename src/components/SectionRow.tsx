@@ -14,7 +14,7 @@ import Animated, {
   useAnimatedReaction,
 } from 'react-native-reanimated';
 import { DropInViewComponent } from './DropInViewComponent';
-import { SectionRowProps } from './types';
+import type { SectionRowProps } from './types';
 
 export const SectionRow = <T extends object>({
   sectionId,

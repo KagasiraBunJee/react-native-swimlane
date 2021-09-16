@@ -24,7 +24,7 @@ import Animated, {
   useDerivedValue,
   runOnJS,
 } from 'react-native-reanimated';
-import {
+import type {
   Column,
   DraggableContextProps,
   KanbanItem,

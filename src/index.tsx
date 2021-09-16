@@ -1,3 +1,3 @@
-import type { Swimlane } from './components/Swimlane';
+import { Swimlane } from './components/Swimlane';
 
-export default Swimlane;
+export default { Swimlane };

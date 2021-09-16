@@ -5,7 +5,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import { Draggable } from './types';
+import type { Draggable } from './types';
 
 interface DropInViewProps extends Draggable {
   columnId: string;
