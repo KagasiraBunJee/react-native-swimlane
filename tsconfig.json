@@ -7,6 +7,7 @@
     "allowUnreachableCode": false,
     "allowUnusedLabels": true,
     "esModuleInterop": true,
+    "importsNotUsedAsValues": "error",
     "forceConsistentCasingInFileNames": true,
     "jsx": "react",
     "lib": ["esnext"],
@@ -23,6 +24,5 @@
     "strict": true,
     "target": "esnext",
     "noImplicitAny": false,
-    "importsNotUsedAsValues": "error",
   }
 }

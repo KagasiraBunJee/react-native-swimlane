@@ -1,7 +1,7 @@
 {
   "name": "react-native-swimlane",
   "version": "0.1.0",
-  "description": "Prototype for kanban style table style with sections",
+  "description": "Swimlane",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
   "types": "lib/typescript/index.d.ts",
@@ -37,7 +37,7 @@
     "android"
   ],
   "repository": "https://github.com/KagasiraBunJee/react-native-swimlane",
-  "author": "Sergii <kagasirabunjee@yahoo.com> (https://github.com/KagasiraBunJee/react-native-swimlane)",
+  "author": "Sergii <kagasirabunjee@yahoo.com> (https://github.com/KagasiraBunJee)",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/KagasiraBunJee/react-native-swimlane/issues"
@@ -63,13 +63,9 @@
     "prettier": "^2.0.5",
     "react": "16.13.1",
     "react-native": "0.63.4",
-    "react-native-builder-bob": "^0.18.0",
+    "react-native-builder-bob": "^0.18.1",
     "release-it": "^14.2.2",
-    "typescript": "^4.1.3",
-    "lodash": "^4.17.20",
-    "@gorhom/portal": "^1.0.8",
-    "react-native-reanimated": "^2.0.0",
-    "react-native-gesture-handler": "^1.9.0"
+    "typescript": "^4.1.3"
   },
   "peerDependencies": {
     "react": "*",
@@ -156,7 +152,7 @@
   },
   "dependencies": {
     "@gorhom/portal": "^1.0.8",
-    "react-native-reanimated": "^2.0.0",
-    "lodash": "^4.17.20"
+    "lodash": "^4.17.21",
+    "react-native-reanimated": "^2.0.0"
   }
 }
