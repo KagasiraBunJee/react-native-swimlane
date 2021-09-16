@@ -40,7 +40,7 @@ const DraggableContext = React.createContext<DraggableContextProps>({
   setDraggableInfo: noop,
 });
 
-export const List = <T extends object>({
+export const Swimlane = <T extends object>({
   columns,
   sections,
   data,

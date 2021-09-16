@@ -1,3 +1,3 @@
-import type { List } from './components/List';
+import type { Swimlane } from './components/Swimlane';
 
-export default List;
+export default Swimlane;

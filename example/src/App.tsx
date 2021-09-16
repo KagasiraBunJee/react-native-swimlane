@@ -1,18 +1,11 @@
 import * as React from 'react';
 
 import { StyleSheet, View, Text } from 'react-native';
-import Swimlane from 'react-native-swimlane';
 
 export default function App() {
-  const [result, setResult] = React.useState<number | undefined>();
-
-  React.useEffect(() => {
-    Swimlane.multiply(3, 7).then(setResult);
-  }, []);
-
   return (
     <View style={styles.container}>
-      <Text>Result: {result}</Text>
+      <Text>Result: 123</Text>
     </View>
   );
 }
