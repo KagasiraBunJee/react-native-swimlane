@@ -13,6 +13,7 @@ import {
   SectionList,
   StyleProp,
   ViewStyle,
+  TouchableOpacity,
 } from 'react-native';
 
 import { noop } from 'lodash';
@@ -52,6 +53,8 @@ export const Swimlane = <T extends object>({
   renderSectionHeader,
   renderColumnItem,
 }: PropsWithChildren<ListProps<T>>): ReactElement | null => {
+  const [_sections, setSections] = useState(sections);
+
   const x = useSharedValue(0);
   const y = useSharedValue(0);
 
@@ -70,7 +73,7 @@ export const Swimlane = <T extends object>({
 
   const matrix = useMemo(
     () =>
-      sections.map((_, sectionIndex) =>
+      _sections.map((_, sectionIndex) =>
         columns.map((_, columnIndex) =>
           data.filter(
             (_rowItem) =>
@@ -79,15 +82,16 @@ export const Swimlane = <T extends object>({
           )
         )
       ),
-    [sections, columns, data]
+    [_sections, columns, data]
   );
 
-  const list: ListType<T>[] = sections.map((section, sectionIndex) => {
+  const list: ListType<T>[] = _sections.map((section, sectionIndex) => {
     const maxRows = colMaxItems([matrix[sectionIndex]], columns).itemNumbers;
+    const expanded = section.expanded ?? false;
     return {
       title: section.title,
       data:
-        maxRows === 0
+        maxRows === 0 || !expanded
           ? []
           : [...Array(maxRows + 1).keys()].map((_, rowIndex) => ({
               items: columns.map(
@@ -97,6 +101,7 @@ export const Swimlane = <T extends object>({
               sectionId: sectionIndex,
             })),
       index: sectionIndex,
+      expanded,
     };
   });
 
@@ -157,6 +162,16 @@ export const Swimlane = <T extends object>({
     setContainerView(ref);
   }, []);
 
+  const onSectionHeaderPress = (sectionIndex: number) => {
+    console.log('123');
+    const updatedSections = _sections.map((section, index) =>
+      index === sectionIndex
+        ? { ...section, expanded: !section.expanded }
+        : section
+    );
+    setSections(updatedSections);
+  };
+
   return (
     <PortalProvider>
       <DraggableContext.Provider value={dragContext}>
@@ -208,6 +223,7 @@ export const Swimlane = <T extends object>({
                     style={columnHeaderContainerStyle}
                     index={section.index}
                     renderColumnItem={renderColumnItem}
+                    onSectionPress={onSectionHeaderPress}
                   >
                     {renderSectionHeader(section)}
                   </SectionHeader>
@@ -237,17 +253,27 @@ export const Swimlane = <T extends object>({
 
 const SectionHeader: React.FC<{
   index: number;
-  renderColumnItem: (column: Column, index: number) => React.ReactNode;
-  style?: StyleProp<ViewStyle>;
   columns: Column[];
-}> = ({ index, renderColumnItem, children, style, columns }) => (
+  style?: StyleProp<ViewStyle>;
+  renderColumnItem: (column: Column, index: number) => React.ReactNode;
+  onSectionPress: (index: number) => void;
+}> = ({
+  index,
+  renderColumnItem,
+  children,
+  style,
+  columns,
+  onSectionPress,
+}) => (
   <View key={index}>
     {index === 0 && (
       <View style={[style, { flexDirection: 'row' }]}>
         {columns.map(renderColumnItem)}
       </View>
     )}
-    {children}
+    <TouchableOpacity onPress={() => onSectionPress(index)}>
+      {children}
+    </TouchableOpacity>
   </View>
 );
 

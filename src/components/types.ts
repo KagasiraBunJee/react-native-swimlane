@@ -56,6 +56,7 @@ export interface Section {
   index: number;
   title: string;
   extraData?: Record<string, any>;
+  expanded?: boolean;
 }
 
 export interface KanbanItem<T> {
@@ -86,6 +87,7 @@ export interface SectionList<T> {
   title: string;
   data: SectionListData<T>[];
   index: number;
+  expanded: boolean;
 }
 
 export type DraggableSectionRow<T> = ItemRenderer<T> & Draggable;
