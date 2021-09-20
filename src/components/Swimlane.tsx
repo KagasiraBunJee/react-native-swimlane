@@ -42,9 +42,9 @@ const DraggableContext = React.createContext<DraggableContextProps>({
 });
 
 export const Swimlane = <T extends object>({
-  columns,
-  sections,
-  data,
+  columns = [],
+  sections = [],
+  data = [],
   columnContentStyle,
   columnWidth,
   columnHeaderContainerStyle,
@@ -82,7 +82,7 @@ export const Swimlane = <T extends object>({
           )
         )
       ),
-    [_sections, columns, data]
+    [sections, columns, data]
   );
 
   const list: ListType<T>[] = _sections.map((section, sectionIndex) => {
