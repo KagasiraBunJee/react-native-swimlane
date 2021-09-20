@@ -237,14 +237,14 @@ export const Swimlane = <T extends object>({
 
 const SectionHeader: React.FC<{
   index: number;
-  renderColumnItem: (index: number) => React.ReactNode;
+  renderColumnItem: (column: Column, index: number) => React.ReactNode;
   style?: StyleProp<ViewStyle>;
   columns: Column[];
 }> = ({ index, renderColumnItem, children, style, columns }) => (
   <View key={index}>
     {index === 0 && (
       <View style={[style, { flexDirection: 'row' }]}>
-        {columns.map((_, index) => renderColumnItem(index))}
+        {columns.map(renderColumnItem)}
       </View>
     )}
     {children}
