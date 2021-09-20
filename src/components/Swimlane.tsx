@@ -6,6 +6,7 @@ import React, {
   useMemo,
   PropsWithChildren,
   ReactElement,
+  useEffect,
 } from 'react';
 import {
   View,
@@ -16,7 +17,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
-import { noop } from 'lodash';
+import noop from 'lodash/noop';
 
 import { PortalProvider, PortalHost } from '@gorhom/portal';
 
@@ -82,7 +83,7 @@ export const Swimlane = <T extends object>({
           )
         )
       ),
-    [sections, columns, data]
+    [columns, data, _sections]
   );
 
   const list: ListType<T>[] = _sections.map((section, sectionIndex) => {
@@ -171,6 +172,10 @@ export const Swimlane = <T extends object>({
     );
     setSections(updatedSections);
   };
+
+  useEffect(() => {
+    setSections(sections);
+  }, [sections]);
 
   return (
     <PortalProvider>
