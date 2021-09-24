@@ -49,7 +49,6 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
     onLayout(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
   const size = useMemo(
     () =>
       originFrame.current
@@ -63,11 +62,11 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
 
   return (
     <View style={[size]}>
-      <Animated.View
-        onLayout={({ nativeEvent }) => onLayoutReceived(nativeEvent.layout)}
-        style={[dropInAnimation]}
-      >
-        <View ref={rootRef} style={{ flex: 1 }}>
+      <Animated.View style={[dropInAnimation]}>
+        <View
+          onLayout={({ nativeEvent }) => onLayoutReceived(nativeEvent.layout)}
+          ref={rootRef}
+        >
           {children}
         </View>
       </Animated.View>

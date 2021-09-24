@@ -15,6 +15,7 @@ import {
   StyleProp,
   ViewStyle,
   TouchableOpacity,
+  StyleSheet,
 } from 'react-native';
 
 import noop from 'lodash/noop';
@@ -35,6 +36,7 @@ import type {
 } from './types';
 import { SectionRow } from './SectionRow';
 import { colMaxItems } from './helper';
+import { SectionHeader } from './SectionHeader';
 
 const DraggableContext = React.createContext<DraggableContextProps>({
   position: { x: 0, y: 0 },
@@ -164,7 +166,7 @@ export const Swimlane = <T extends object>({
   }, []);
 
   const onSectionHeaderPress = (sectionIndex: number) => {
-    console.log('123');
+    // console.log('123');
     const updatedSections = _sections.map((section, index) =>
       index === sectionIndex
         ? { ...section, expanded: !section.expanded }
@@ -187,7 +189,7 @@ export const Swimlane = <T extends object>({
           }}
         >
           <Animated.ScrollView
-            style={{ height: '100%' }}
+            style={styles.scrollView}
             scrollEnabled={!panEnabled}
             horizontal={true}
           >
@@ -220,7 +222,7 @@ export const Swimlane = <T extends object>({
                     />
                   );
                 }}
-                style={{ overflow: 'visible' }}
+                style={styles.sectionList}
                 keyExtractor={(item, index) => `${index}`}
                 renderSectionHeader={({ section }) => (
                   <SectionHeader
@@ -256,30 +258,9 @@ export const Swimlane = <T extends object>({
   );
 };
 
-const SectionHeader: React.FC<{
-  index: number;
-  columns: Column[];
-  style?: StyleProp<ViewStyle>;
-  renderColumnItem: (column: Column, index: number) => React.ReactNode;
-  onSectionPress: (index: number) => void;
-}> = ({
-  index,
-  renderColumnItem,
-  children,
-  style,
-  columns,
-  onSectionPress,
-}) => (
-  <View key={index}>
-    {index === 0 && (
-      <View style={[style, { flexDirection: 'row' }]}>
-        {columns.map(renderColumnItem)}
-      </View>
-    )}
-    <TouchableOpacity onPress={() => onSectionPress(index)}>
-      {children}
-    </TouchableOpacity>
-  </View>
-);
+const styles = StyleSheet.create({
+  sectionList: { overflow: 'visible' },
+  scrollView: { height: '100%' },
+});
 
 export const useDrag = () => React.useContext(DraggableContext);

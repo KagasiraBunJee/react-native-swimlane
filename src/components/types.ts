@@ -83,11 +83,8 @@ export interface SectionListData<T> {
   sectionId: number;
 }
 
-export interface SectionList<T> {
-  title: string;
+export interface SectionList<T> extends Section {
   data: SectionListData<T>[];
-  index: number;
-  expanded: boolean;
 }
 
 export type DraggableSectionRow<T> = ItemRenderer<T> & Draggable;

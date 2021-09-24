@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useEffect } from 'react';
 
 import { StyleSheet, View, Text, SafeAreaView } from 'react-native';
-import { Swimlane, Column, Section, KanbanItem } from 'react-native-swimlane';
+import { Swimlane, Column, Section, KanbanItem } from '../../src';
 
 export default function App() {
   const [data, setData] = useState<{
@@ -17,7 +17,7 @@ export default function App() {
 
   useEffect(() => {
     setTimeout(() => {
-      console.log('update');
+      // console.log('update');
       const sections: Section[] = [
         { index: 0, title: '123' },
         { index: 1, title: '321' },
@@ -44,14 +44,14 @@ export default function App() {
         sections={data.sections}
         data={data.items}
         emptyItem={() => <Text>Empty item</Text>}
-        renderColumnItem={(column) => (
-          <View>
+        renderColumnItem={(column, index) => (
+          <View key={index}>
             <Text>{column.title}</Text>
           </View>
         )}
         renderSectionHeader={(section) => {
           return (
-            <View>
+            <View key={section.index}>
               <Text>{section.title}</Text>
             </View>
           );

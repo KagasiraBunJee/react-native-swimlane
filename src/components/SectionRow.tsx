@@ -8,7 +8,7 @@ import React, {
   ReactElement,
   PropsWithChildren,
 } from 'react';
-import { LayoutRectangle, View } from 'react-native';
+import { LayoutRectangle, StyleSheet, View } from 'react-native';
 import Animated, {
   runOnJS,
   useAnimatedReaction,
@@ -68,7 +68,7 @@ export const SectionRow = <T extends object>({
     if (cursorEntered) {
       const item = find(
         itemsRef.current,
-        (item) => x >= item.frame.x && x <= item.frame.x + item.frame.width
+        (_item) => x >= _item.frame.x && x <= _item.frame.x + _item.frame.width
       );
       if (item) {
         setHoveredItem(`${sectionId}-${item.columnId}`);
@@ -97,8 +97,8 @@ export const SectionRow = <T extends object>({
   };
 
   return (
-    <Animated.View style={{ padding: 0 }}>
-      <View ref={ref} style={{ flexDirection: 'row' }}>
+    <View style={styles.dropInContainer}>
+      <View ref={ref} style={styles.dropInWrapper}>
         {items.map((row, index) => {
           return (
             <DropInViewComponent
@@ -125,7 +125,7 @@ export const SectionRow = <T extends object>({
                   {
                     width: columnWidth,
                   },
-                  row ? {} : { paddingTop: 0 },
+                  row ? {} : styles.dropInComponent,
                 ]}
               >
                 {renderItem(row, index, sectionId, rowIndex) ||
@@ -135,6 +135,18 @@ export const SectionRow = <T extends object>({
           );
         })}
       </View>
-    </Animated.View>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  dropInComponent: {
+    flexDirection: 'row',
+  },
+  dropInContainer: {
+    padding: 0,
+  },
+  dropInWrapper: {
+    flexDirection: 'row',
+  },
+});
