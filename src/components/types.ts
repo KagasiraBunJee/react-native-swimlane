@@ -37,13 +37,47 @@ export interface ListProps<T> extends ItemRenderer<T> {
   columnHeaderContainerStyle?: StyleProp<ViewStyle>;
 }
 
+export interface DraggableContextInfo {
+  section: number;
+  column: number;
+  row: number;
+  info: any;
+  startFrame: { x: number; y: number; width: number; height: number };
+}
+
+export interface DragCursorInfo {
+  currentX: Animated.SharedValue<number>;
+  currentY: Animated.SharedValue<number>;
+  horizontalOffset: Animated.SharedValue<number>;
+  verticalOffset: Animated.SharedValue<number>;
+  isDragging: boolean;
+  originalSection: string | null;
+  currentSection: string | null;
+  info: DraggableContextInfo | null;
+}
+
 export interface DraggableContextProps {
-  position: { x: 0; y: 0 };
-  setPosition: (x: number, y: number) => void;
-  setDraggableInfo: (
-    columnId: number,
-    sectionId: number,
-    sectionRow: number
+  dragCursorInfo: DragCursorInfo;
+  startDrag: (props: DraggableContextInfo) => void;
+  endDrag: () => void;
+  move: (
+    offsetX: number,
+    offsetY: number,
+    startX: number,
+    startY: number
+  ) => void;
+  onItemHover: (
+    column: number,
+    section: number,
+    row: number,
+    id: string
+  ) => void;
+  onItemFrame: (
+    section: number,
+    column: number,
+    row: number,
+    id: string,
+    frame: LayoutRectangle
   ) => void;
 }
 
@@ -66,8 +100,12 @@ export interface KanbanItem<T> {
   data: T;
 }
 
+export interface AlteredKanbanItem<T> extends KanbanItem<T> {
+  id: string;
+}
+
 export interface Draggable {
-  onDragStart?: () => void;
+  onDragStart?: (section: number, column: number) => void;
   onDragEnd?: () => void;
 }
 
@@ -80,7 +118,7 @@ export interface DataItem {
 }
 
 export interface SectionListData<T> {
-  items: KanbanItem<T>[];
+  items: AlteredKanbanItem<T>[];
   sectionId: number;
 }
 
@@ -104,6 +142,7 @@ export interface SectionRowProps<T> extends DraggableSectionRow<T> {
   onItemEnter?: (sectionId: number, columnId: number) => void;
   onItemExit?: (sectionId: number, columnId: number) => void;
   onFrame?: (frame: LayoutRectangle) => void;
+  onUnmount?: (section: number, row: number) => void;
 }
 
 export interface Point {
