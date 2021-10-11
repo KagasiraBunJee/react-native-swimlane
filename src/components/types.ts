@@ -29,6 +29,7 @@ export interface ListProps<T> extends ItemRenderer<T> {
   columns: Column[];
   sections: Section[];
   data: KanbanItem<T>[];
+  emptyRows?: number;
   renderSectionHeader: (section: any) => React.ReactNode;
   renderColumnItem: (column: Column, index: number) => React.ReactNode;
   columnContentStyle?: ColumnContentStyle;
