@@ -51,6 +51,7 @@ export const Swimlane = <T extends object>({
   columnContentStyle,
   columnWidth,
   columnHeaderContainerStyle,
+  emptyRows = 1,
   renderItem,
   emptyItem,
   renderSectionHeader,
@@ -96,7 +97,7 @@ export const Swimlane = <T extends object>({
       data:
         maxRows === 0 || !expanded
           ? []
-          : [...Array(maxRows + 1).keys()].map((_, rowIndex) => ({
+          : [...Array(maxRows + emptyRows).keys()].map((_, rowIndex) => ({
               items: columns.map(
                 (_, columnIndex) =>
                   matrix?.[sectionIndex]?.[columnIndex]?.[rowIndex]
