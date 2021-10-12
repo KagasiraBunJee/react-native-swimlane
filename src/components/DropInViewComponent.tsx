@@ -44,7 +44,7 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
   const pressed = useSharedValue(false);
   const rootRef = useRef<View>(null);
   const originFrame = useSharedValue<LayoutRectangle | null>(null);
-  const { startDrag, endDrag, move, dragCursorInfo, onItemFrame } = useDrag();
+  const { startDrag, endDrag, move, onItemFrame } = useDrag();
   const focus = useSharedValue(canDropIn);
   const isMounted = useRef(false);
 
@@ -118,7 +118,6 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
       if (!isMounted.current) {
         return;
       }
-      pressed.value = false;
       x.value = 0;
       y.value = 0;
       runOnJS(endDrag)();
@@ -140,26 +139,21 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
     };
   });
 
-  const isHoverOrigin =
-    dragCursorInfo.info?.column === column &&
-    dragCursorInfo.info?.section === section &&
-    dragCursorInfo.info?.row === rowIndex;
-
   const animatedHover = useAnimatedStyle(() => {
     return {
-      paddingTop: 0,
+      paddingTop: focus.value ? 100 : 0,
+      backgroundColor: focus.value ? 'green' : 'transparent',
     };
-  }, [isHoverOrigin]);
-
-  useEffect(() => {
-    if (!isMounted.current) {
-      return;
-    }
-    focus.value = canDropIn;
   }, [canDropIn]);
 
   useEffect(() => {
+    pressed.value = false;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [column, section, row]);
+
+  useEffect(() => {
     calcSize();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parentView, rootRef.current, column, section, row, endDrag]);
 
   useEffect(() => {

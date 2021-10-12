@@ -9,6 +9,7 @@ export type ColumnContentStyle = StyleProp<{
   paddingLeft?: ViewStyle['paddingLeft'];
   paddingRight?: ViewStyle['paddingRight'];
   backgroundColor?: ViewStyle['backgroundColor'];
+  marginHorizontal?: ViewStyle['marginHorizontal'];
 }>;
 
 interface ItemRenderer<T> {

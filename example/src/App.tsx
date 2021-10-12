@@ -98,7 +98,6 @@ export default function App() {
             </View>
           ) : null;
         }}
-        showLastAsEmpty
         columnContentStyle={{ marginHorizontal: 13 }}
       />
     </SafeAreaView>

@@ -1,7 +1,6 @@
 import find from 'lodash/find';
 import noop from 'lodash/noop';
 import React, {
-  useCallback,
   useEffect,
   useRef,
   useState,
@@ -9,12 +8,7 @@ import React, {
   PropsWithChildren,
 } from 'react';
 import { LayoutRectangle, StyleSheet, View } from 'react-native';
-import Animated, {
-  runOnJS,
-  useAnimatedReaction,
-  useDerivedValue,
-  useSharedValue,
-} from 'react-native-reanimated';
+import Animated, { runOnJS, useDerivedValue } from 'react-native-reanimated';
 import { DropInViewComponent } from './DropInViewComponent';
 import { useDrag } from './Swimlane';
 import type { SectionRowProps } from './types';
@@ -30,7 +24,6 @@ export const SectionRow = <T extends object>({
   renderItem,
   emptyItem,
   onFrame = noop,
-  onUnmount = noop,
 }: PropsWithChildren<SectionRowProps<T>>): ReactElement | null => {
   const [localItems, setItems] = useState(items);
   const ref = useRef<View>(null);
@@ -38,19 +31,13 @@ export const SectionRow = <T extends object>({
   const itemsRef = useRef<
     Record<string, { columnId: number; frame: LayoutRectangle }>
   >({});
-  const sectionMaxHeight = useRef<number | null>(null);
-  const sectionOffsetY = useSharedValue(0);
   const { dragCursorInfo, onItemHover } = useDrag();
   const isMounted = useRef(false);
 
   const onFrameChange = (frame: LayoutRectangle, index: number, id: string) => {
-    console.log(
-      'onFrameChange',
-      sectionId,
-      rowIndex,
-      { [index]: { columnId: index, frame, id } },
-      localItems
-    );
+    if (hoveredItem === `${sectionId}-${index}`) {
+      return;
+    }
     itemsRef.current = {
       ...itemsRef.current,
       [index]: { columnId: index, frame, id },
@@ -98,6 +85,7 @@ export const SectionRow = <T extends object>({
     console.log('items updated', items, sectionId, rowIndex, itemsRef);
     itemsRef.current = {};
     setItems(items);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(items)]);
 
   useEffect(() => {
