@@ -24,6 +24,7 @@ import Animated, {
   runOnJS,
   useAnimatedStyle,
   useAnimatedScrollHandler,
+  useAnimatedRef,
 } from 'react-native-reanimated';
 import type {
   AlteredKanbanItem,
@@ -72,6 +73,8 @@ export const Swimlane = <T extends object>({
   const horizontalOffset = useSharedValue(0);
   const verticalOffset = useSharedValue(0);
 
+  const sectionListRef = useAnimatedRef<SectionList>();
+
   const offsetX = useSharedValue(0);
   const offsetY = useSharedValue(0);
 
@@ -91,7 +94,6 @@ export const Swimlane = <T extends object>({
   const dragInfoRef = useRef<DraggableContextInfo | null>(null);
   const sectionsInfoRef = useRef<Record<string, any>>();
   const [_testVal, setVal] = useState<any[]>([]);
-  const dropInViews = useRef<Record<string, any> | {}>({});
 
   const matrix = _sections.map((_, sectionIndex) =>
     columns.map((_, columnIndex) =>
@@ -179,19 +181,7 @@ export const Swimlane = <T extends object>({
       console.log(column, section, row, id);
       targetPositionRef.current = { section, column, row, id };
     },
-    onItemFrame: (section, column, row, id, frame) => {
-      console.log(section, column, row, id, frame);
-      dropInViews.current = {
-        ...dropInViews.current,
-        [`${section}-${row}-${column}`]: {
-          section,
-          column,
-          row,
-          id,
-          frame,
-        },
-      };
-    },
+    onItemFrame: noop,
     dragCursorInfo: {
       currentX,
       currentY,
@@ -275,6 +265,7 @@ export const Swimlane = <T extends object>({
   }, [sections, data]);
 
   const scrollHandler = useAnimatedScrollHandler((event) => {
+    console.log(event.contentOffset.x);
     horizontalOffset.value = event.contentOffset.x;
   });
 
@@ -286,8 +277,12 @@ export const Swimlane = <T extends object>({
             style={styles.scrollView}
             horizontal={true}
             onScroll={scrollHandler}
+            onScrollEndDrag={({ nativeEvent }) => {
+              horizontalOffset.value = nativeEvent.contentOffset.x;
+            }}
           >
             <SectionList
+              ref={sectionListRef}
               sections={_testVal}
               renderItem={({ item, index: rowIndex }) => {
                 return (
@@ -334,8 +329,9 @@ export const Swimlane = <T extends object>({
               style={[
                 {
                   position: 'absolute',
-                  top: dragInfoRef.current.startFrame.y,
-                  left: dragInfoRef.current.startFrame.x,
+                  top: dragInfoRef.current.startFrame.y - verticalOffset.value,
+                  left:
+                    dragInfoRef.current.startFrame.x - horizontalOffset.value,
                   width: dragInfoRef.current.startFrame.width,
                   height: dragInfoRef.current.startFrame.height,
                 },

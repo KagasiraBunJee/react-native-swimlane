@@ -49,9 +49,6 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
   const isMounted = useRef(false);
 
   const calcSize = () => {
-    if (!isMounted.current) {
-      return;
-    }
     if (parentView && rootRef.current) {
       rootRef.current.measureLayout(
         parentView,
@@ -94,17 +91,11 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
 
   const eventHandler = useAnimatedGestureHandler({
     onStart: () => {
-      if (!isMounted.current) {
-        return;
-      }
       pressed.value = true;
       // onDragStart();
       runOnJS(prepareToDrag)();
     },
     onActive: (event) => {
-      if (!isMounted.current) {
-        return;
-      }
       x.value = startPosition.value.x + event.translationX;
       y.value = startPosition.value.y + event.translationY;
       runOnJS(move)(
@@ -115,9 +106,7 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
       );
     },
     onEnd: () => {
-      if (!isMounted.current) {
-        return;
-      }
+      pressed.value = false;
       x.value = 0;
       y.value = 0;
       runOnJS(endDrag)();
