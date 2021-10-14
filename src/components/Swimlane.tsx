@@ -75,18 +75,13 @@ export const Swimlane = <T extends object>({
     { content: React.ReactNode; style: any } | undefined
   >(undefined);
 
-  const matrix = useMemo(
-    () =>
-      _sections.map((_, sectionIndex) =>
-        columns.map((_, columnIndex) =>
-          data.filter(
-            (_rowItem) =>
-              _rowItem.column === columnIndex &&
-              _rowItem.section === sectionIndex
-          )
-        )
-      ),
-    [columns, data, _sections]
+  const matrix = _sections.map((_, sectionIndex) =>
+    columns.map((_, columnIndex) =>
+      data.filter(
+        (_rowItem) =>
+          _rowItem.column === columnIndex && _rowItem.section === sectionIndex
+      )
+    )
   );
 
   const list: ListType<T>[] = _sections.map((section, sectionIndex) => {
