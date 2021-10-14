@@ -42,12 +42,30 @@ export default function App() {
     const columns: Column[] = [
       { index: 0, title: 'COlumn 0' },
       { index: 1, title: 'COlumn 1' },
+      { index: 2, title: 'COlumn 2' },
+      { index: 3, title: 'COlumn 3' },
+      { index: 4, title: 'COlumn 4' },
+      { index: 5, title: 'COlumn 5' },
     ];
     const items: KanbanItem<any>[] = [
       { column: 0, section: 0, data: { value: 'item 1' } },
       { column: 0, section: 0, data: { value: 'item 2' } },
       { column: 0, section: 1, data: { value: 'item 3' } },
-      { column: 1, section: 1, data: { value: 'item 4' } },
+      { column: 1, section: 1, data: { value: 'item 5' } },
+      { column: 1, section: 1, data: { value: 'item 6' } },
+      { column: 1, section: 1, data: { value: 'item 7' } },
+      { column: 1, section: 0, data: { value: 'item 8' } },
+      { column: 1, section: 1, data: { value: 'item 9' } },
+      { column: 1, section: 1, data: { value: 'item 10' } },
+      { column: 0, section: 0, data: { value: 'item 11' } },
+      { column: 1, section: 1, data: { value: 'item 12' } },
+      { column: 0, section: 0, data: { value: 'item 13' } },
+      { column: 1, section: 1, data: { value: 'item 14' } },
+      { column: 1, section: 0, data: { value: 'item 15' } },
+      { column: 0, section: 1, data: { value: 'item 16' } },
+      { column: 1, section: 0, data: { value: 'item 17' } },
+      { column: 1, section: 1, data: { value: 'item 18' } },
+      { column: 0, section: 0, data: { value: 'item 19' } },
     ];
     setData({ columns, sections, items });
   }, []);
