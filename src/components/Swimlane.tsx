@@ -91,7 +91,8 @@ export const Swimlane = <T extends object>({
     row: number;
     id: string;
   } | null>(null);
-  const dragInfoRef = useRef<DraggableContextInfo | null>(null);
+  // const dragInfoRef = useRef<DraggableContextInfo | null>(null);
+  const [dragInfo, setDragInfo] = useState<DraggableContextInfo | null>(null);
   const sectionsInfoRef = useRef<Record<string, any>>();
   const [_testVal, setVal] = useState<any[]>([]);
 
@@ -127,7 +128,7 @@ export const Swimlane = <T extends object>({
   }, {});
 
   const savePosition = () => {
-    const dragInfo = dragInfoRef.current;
+    // const dragInfo = dragInfoRef.current;
     const targetPos = targetPositionRef?.current;
     if (targetPos && dragInfo?.info) {
       const dataToUpdate = _data.find((o) => o.id === dragInfo.info.id);
@@ -150,14 +151,15 @@ export const Swimlane = <T extends object>({
           })
         );
       }
-      dragInfoRef.current = null;
+      // dragInfoRef.current = null;
+      setDragInfo(null);
     }
   };
 
   const dragContext: DraggableContextProps = {
     startDrag: (props) => {
-      // setDragInfo(props);
-      dragInfoRef.current = props;
+      setDragInfo(props);
+      // dragInfoRef.current = props;
     },
     endDrag: () => {
       console.log('saving to new location', targetPositionRef.current);
@@ -187,12 +189,15 @@ export const Swimlane = <T extends object>({
       currentY,
       horizontalOffset: horizontalOffset,
       verticalOffset: horizontalOffset,
-      isDragging: dragInfoRef.current !== null,
-      currentSection:
-        dragInfoRef.current &&
-        `${dragInfoRef.current.section}-${dragInfoRef.current.row}`,
+      // isDragging: dragInfoRef.current !== null,
+      isDragging: dragInfo !== null,
+      // currentSection:
+      //   dragInfoRef.current &&
+      //   `${dragInfoRef.current.section}-${dragInfoRef.current.row}`,
+      currentSection: dragInfo && `${dragInfo.section}-${dragInfo.row}`,
       originalSection: currentSectionRow,
-      info: dragInfoRef.current,
+      // info: dragInfoRef.current,
+      info: dragInfo,
     },
   };
 
@@ -213,7 +218,8 @@ export const Swimlane = <T extends object>({
 
   // TODO: Drag n Drop
   const calcSectionHover = (x: number, y: number) => {
-    if (dragInfoRef.current) {
+    // if (dragInfoRef.current) {
+    if (dragInfo) {
       const el = find(
         sectionsInfoRef.current,
         (item) => y > item.frame.y && y <= item.frame.y + item.frame.height
@@ -324,16 +330,23 @@ export const Swimlane = <T extends object>({
               }
             />
           </Animated.ScrollView>
-          {dragInfoRef.current && (
+          {dragInfo && (
             <Animated.View
               style={[
+                // {
+                //   position: 'absolute',
+                //   top: dragInfoRef.current.startFrame.y - verticalOffset.value,
+                //   left:
+                //     dragInfoRef.current.startFrame.x - horizontalOffset.value,
+                //   width: dragInfoRef.current.startFrame.width,
+                //   height: dragInfoRef.current.startFrame.height,
+                // },
                 {
                   position: 'absolute',
-                  top: dragInfoRef.current.startFrame.y - verticalOffset.value,
-                  left:
-                    dragInfoRef.current.startFrame.x - horizontalOffset.value,
-                  width: dragInfoRef.current.startFrame.width,
-                  height: dragInfoRef.current.startFrame.height,
+                  top: dragInfo.startFrame.y - verticalOffset.value,
+                  left: dragInfo.startFrame.x - horizontalOffset.value,
+                  width: dragInfo.startFrame.width,
+                  height: dragInfo.startFrame.height,
                 },
                 animatedMove,
               ]}
@@ -351,10 +364,10 @@ export const Swimlane = <T extends object>({
                 ]}
               >
                 {renderItem(
-                  dragInfoRef.current.info,
-                  dragInfoRef.current.column,
-                  dragInfoRef.current.section,
-                  dragInfoRef.current.row
+                  dragInfo.info,
+                  dragInfo.column,
+                  dragInfo.section,
+                  dragInfo.row
                 )}
               </View>
             </Animated.View>

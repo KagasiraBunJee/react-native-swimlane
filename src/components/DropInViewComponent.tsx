@@ -68,6 +68,7 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
   };
 
   const prepareToDrag = () => {
+    pressed.value = true;
     rootRef.current?.measureLayout(
       parentView,
       (dropInX, dropInY, width, height) => {
