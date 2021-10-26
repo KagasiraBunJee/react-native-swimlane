@@ -21,7 +21,6 @@ target 'SwimlaneExample' do
   config = use_native_modules!
 
   pod 'React-jsi', :path => '../node_modules/react-native/ReactCommon/jsi', :modular_headers => true, :inhibit_warnings => true
-  pod 'RNGestureHandler', :path => '../../node_modules/react-native-gesture-handler', :modular_headers => true, :inhibit_warnings => true
 
   use_react_native!(:path => config["reactNativePath"])
 
