@@ -25,6 +25,8 @@ import Animated, {
   useAnimatedStyle,
   useAnimatedScrollHandler,
   useAnimatedRef,
+  scrollTo,
+  withTiming,
 } from 'react-native-reanimated';
 import type {
   AlteredKanbanItem,
@@ -70,16 +72,28 @@ export const Swimlane = <T extends object>({
 }: PropsWithChildren<ListProps<T>>): ReactElement | null => {
   const [_sections, setSections] = useState(sections);
   const [_data, setData] = useState<AlteredKanbanItem<T>[]>([]);
-  const horizontalOffset = useSharedValue(0);
+
   const verticalOffset = useSharedValue(0);
+
+  const horizontalScrollRef = useAnimatedRef<Animated.ScrollView>();
+  const horizontalScrollValue = useSharedValue(0);
+  const horizontalOffset = useSharedValue(0);
+  const horizontalAnimating = useSharedValue(false);
 
   const sectionListRef = useAnimatedRef<SectionList>();
 
   const offsetX = useSharedValue(0);
   const offsetY = useSharedValue(0);
 
+  const startX = useSharedValue(0);
+  const startY = useSharedValue(0);
+
+  const scrollXOffset = useSharedValue(0);
+
   const currentX = useSharedValue(0);
   const currentY = useSharedValue(0);
+
+  const horizontalScrollSize = useSharedValue(0);
 
   const [containerView, setContainerView] = useState<View | null>(null);
   const [currentSectionRow, setCurrentSectionRow] = useState<string | null>(
@@ -156,9 +170,14 @@ export const Swimlane = <T extends object>({
     }
   };
 
+  const newCurrentX = useDerivedValue(() => {
+    return currentX.value + horizontalOffset.value;
+  });
+
   const dragContext: DraggableContextProps = {
     startDrag: (props) => {
       setDragInfo(props);
+      horizontalScrollValue.value = horizontalOffset.value;
       // dragInfoRef.current = props;
     },
     endDrag: () => {
@@ -169,14 +188,24 @@ export const Swimlane = <T extends object>({
 
       setCurrentSectionRow(null);
       sectionsInfoRef.current = {};
-      // setDragInfo(null);
+      scrollXOffset.value = 0;
+
+      currentX.value = 0;
+      currentY.value = 0;
+
+      horizontalAnimating.value = false;
+      horizontalScrollValue.value = horizontalOffset.value;
+      setDragInfo(null);
     },
-    move: (x, y, startX, startY) => {
+    move: (x, y, _startX, _startY) => {
       offsetX.value = x;
       offsetY.value = y;
 
-      currentX.value = x + startX;
-      currentY.value = y + startY;
+      startX.value = _startX;
+      startY.value = _startY;
+
+      currentX.value = x + _startX;
+      currentY.value = y + _startX;
     },
     onItemHover: (column, section, row, id) => {
       // moveItem(section, column, row);
@@ -185,9 +214,9 @@ export const Swimlane = <T extends object>({
     },
     onItemFrame: noop,
     dragCursorInfo: {
-      currentX,
+      currentX: newCurrentX,
       currentY,
-      horizontalOffset: horizontalOffset,
+      horizontalOffset,
       verticalOffset: horizontalOffset,
       // isDragging: dragInfoRef.current !== null,
       isDragging: dragInfo !== null,
@@ -237,8 +266,28 @@ export const Swimlane = <T extends object>({
   }));
 
   useDerivedValue(() => {
-    runOnJS(calcSectionHover)(currentX.value, currentY.value);
-  });
+    scrollTo(horizontalScrollRef, horizontalScrollValue.value, 0, false);
+
+    const _offset = startX.value - horizontalScrollValue.value + offsetX.value;
+    // console.log('scrollTo', startX.value, horizontalOffset.value, offsetX.value);
+    if (!horizontalAnimating.value && horizontalScrollSize.value > 0) {
+      if (_offset > horizontalScrollSize.value - 100) {
+        horizontalAnimating.value = true;
+
+        horizontalScrollValue.value = withTiming(
+          horizontalScrollValue.value + 100,
+          { duration: 700 },
+          () => {
+            horizontalAnimating.value = false;
+          }
+        );
+      }
+    }
+    runOnJS(calcSectionHover)(
+      currentX.value + horizontalScrollValue.value,
+      currentY.value + offsetY.value
+    );
+  }, [horizontalScrollValue.value, dragInfo]);
 
   const onRefChange = useCallback((ref) => {
     setContainerView(ref);
@@ -271,21 +320,29 @@ export const Swimlane = <T extends object>({
   }, [sections, data]);
 
   const scrollHandler = useAnimatedScrollHandler((event) => {
-    console.log(event.contentOffset.x);
     horizontalOffset.value = event.contentOffset.x;
   });
 
   return (
     <DraggableContext.Provider value={dragContext}>
       <GestureHandlerRootView>
-        <View ref={onRefChange}>
+        <View
+          onLayout={({ nativeEvent }) =>
+            (horizontalScrollSize.value = nativeEvent.layout.width)
+          }
+          ref={onRefChange}
+        >
           <Animated.ScrollView
             style={styles.scrollView}
             horizontal={true}
-            onScroll={scrollHandler}
             onScrollEndDrag={({ nativeEvent }) => {
-              horizontalOffset.value = nativeEvent.contentOffset.x;
+              if (horizontalAnimating.value) {
+                horizontalOffset.value = nativeEvent.contentOffset.x;
+              }
             }}
+            onScroll={scrollHandler}
+            ref={horizontalScrollRef}
+            scrollEventThrottle={16}
           >
             <SectionList
               ref={sectionListRef}
@@ -305,7 +362,7 @@ export const Swimlane = <T extends object>({
                     onFrame={(frame) =>
                       onSectionFrame(item.sectionId, rowIndex, frame)
                     }
-                    cursorPositionX={currentX}
+                    cursorPositionX={newCurrentX}
                     columnWidth={columnWidth}
                     columnContentStyle={columnContentStyle}
                   />
@@ -333,14 +390,6 @@ export const Swimlane = <T extends object>({
           {dragInfo && (
             <Animated.View
               style={[
-                // {
-                //   position: 'absolute',
-                //   top: dragInfoRef.current.startFrame.y - verticalOffset.value,
-                //   left:
-                //     dragInfoRef.current.startFrame.x - horizontalOffset.value,
-                //   width: dragInfoRef.current.startFrame.width,
-                //   height: dragInfoRef.current.startFrame.height,
-                // },
                 {
                   position: 'absolute',
                   top: dragInfo.startFrame.y - verticalOffset.value,

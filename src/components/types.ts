@@ -26,6 +26,11 @@ interface ItemRenderer<T> {
   ) => React.ReactNode;
 }
 
+export interface Target {
+  section: Section;
+  column: Column;
+}
+
 export interface ListProps<T> extends ItemRenderer<T> {
   columns: Column[];
   sections: Section[];
@@ -33,6 +38,7 @@ export interface ListProps<T> extends ItemRenderer<T> {
   emptyRows?: number;
   renderSectionHeader: (section: any) => React.ReactNode;
   renderColumnItem: (column: Column, index: number) => React.ReactNode;
+  onItemMoved: (from: Target, to: Target) => void;
   columnContentStyle?: ColumnContentStyle;
   columnWidth?: number;
   columnHeaderContainerStyle?: StyleProp<ViewStyle>;

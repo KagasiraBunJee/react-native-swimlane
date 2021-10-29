@@ -15,6 +15,8 @@ export default function App() {
     sections: [],
   });
 
+  console.log('render');
+
   useEffect(() => {
     // setTimeout(() => {
     //   // console.log('update');
@@ -96,6 +98,7 @@ export default function App() {
             </View>
           );
         }}
+        onItemMoved={() => {}}
         renderItem={(info, column, section, row) => {
           // const item = data.items.filter(
           //   (item) => item.column === column && item.section === section
@@ -105,8 +108,8 @@ export default function App() {
               style={{
                 backgroundColor: 'red',
                 marginVertical: 10,
-                height: 70,
-                width: 70,
+                height: 300,
+                width: 290,
               }}
             >
               <Text>
