@@ -57,15 +57,6 @@ export interface DraggableContextInfo {
   startFrame: { x: number; y: number; width: number; height: number };
 }
 
-export interface DragCursorInfo {
-  horizontalOffset: Animated.SharedValue<number>;
-  verticalOffset: Animated.SharedValue<number>;
-  isDragging: boolean;
-  originalSection: string | null;
-  currentSection: string | null;
-  info: DraggableContextInfo | null;
-}
-
 export interface DraggableContextProps {
   offsetX: Animated.SharedValue<number>;
   offsetY: Animated.SharedValue<number>;
@@ -74,7 +65,6 @@ export interface DraggableContextProps {
   screenOffsetX: Animated.SharedValue<number>;
   screenOffsetY: Animated.SharedValue<number>;
   isDragging: Animated.SharedValue<boolean>;
-  dragCursorInfo: DragCursorInfo;
   startDrag: (props: DraggableContextInfo) => void;
   endDrag: () => void;
   onItemHover: (

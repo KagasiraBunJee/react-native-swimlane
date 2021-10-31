@@ -41,14 +41,6 @@ import { SectionHeader } from './SectionHeader';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const DraggableContext = React.createContext<DraggableContextProps>({
-  dragCursorInfo: {
-    horizontalOffset: { value: 0 },
-    verticalOffset: { value: 0 },
-    isDragging: false,
-    currentSection: null,
-    originalSection: null,
-    info: null,
-  },
   startDrag: noop,
   endDrag: noop,
   onItemHover: noop,
@@ -87,23 +79,25 @@ export const Swimlane = <T extends object>({
   const screenOffsetX = useSharedValue(0);
   const screenOffsetY = useSharedValue(0);
 
-  const verticalOffset = useSharedValue(0);
+  const scrollingAnimating = useSharedValue(false);
 
   const horizontalScrollRef = useAnimatedRef<Animated.ScrollView>();
   const horizontalOffset = useSharedValue(0);
-  const horizontalAnimating = useSharedValue(false);
   const horizontalContentMaxOffset = useSharedValue(0);
   const horizontalStartDragOffset = useSharedValue(0);
+  const horizontalScrollSize = useSharedValue(0);
 
   const sectionListRef = useAnimatedRef<SectionList>();
+  const verticalOffset = useSharedValue(0);
+  const verticalContentMaxOffset = useSharedValue(0);
+  const verticalStartDragOffset = useSharedValue(0);
+  const verticalScrollSize = useSharedValue(0);
 
   const offsetX = useSharedValue(0);
   const offsetY = useSharedValue(0);
 
   const startX = useSharedValue(0);
   const startY = useSharedValue(0);
-
-  const horizontalScrollSize = useSharedValue(0);
 
   const [containerView, setContainerView] = useState<View | null>(null);
   const [currentSectionRow, setCurrentSectionRow] = useState<string | null>(
@@ -189,20 +183,36 @@ export const Swimlane = <T extends object>({
     }
   };
 
-  const newCurrentX = useDerivedValue(() => {
-    return (
+  const shadowItemX = useDerivedValue(
+    () =>
+      dragInfo?.startFrame?.x
+        ? dragInfo.startFrame.x - horizontalStartDragOffset.value
+        : horizontalStartDragOffset.value,
+    [dragInfo?.startFrame.x]
+  );
+
+  const shadowItemY = useDerivedValue(
+    () =>
+      dragInfo?.startFrame?.y
+        ? dragInfo.startFrame.y - verticalStartDragOffset.value
+        : verticalStartDragOffset.value,
+    [dragInfo?.startFrame.x]
+  );
+
+  const cursorPositionX = useDerivedValue(
+    () =>
       offsetX.value +
       startX.value +
       horizontalOffset.value -
       horizontalStartDragOffset.value
-    );
-  });
+  );
 
   const dragContext: DraggableContextProps = {
     startDrag: (props) => {
       setDragInfo(props);
       isDragging.value = true;
       horizontalStartDragOffset.value = horizontalOffset.value;
+      verticalStartDragOffset.value = verticalOffset.value;
     },
     endDrag: () => {
       savePosition();
@@ -212,30 +222,15 @@ export const Swimlane = <T extends object>({
       setCurrentSectionRow(null);
       sectionsInfoRef.current = {};
 
-      horizontalAnimating.value = false;
+      scrollingAnimating.value = false;
       setDragInfo(null);
 
       isDragging.value = false;
     },
     onItemHover: (column, section, row, id) => {
-      // moveItem(section, column, row);
-      console.log(column, section, row, id);
       targetPositionRef.current = { section, column, row, id };
     },
     onItemFrame: noop,
-    dragCursorInfo: {
-      horizontalOffset,
-      verticalOffset: horizontalOffset,
-      // isDragging: dragInfoRef.current !== null,
-      isDragging: dragInfo !== null,
-      // currentSection:
-      //   dragInfoRef.current &&
-      //   `${dragInfoRef.current.section}-${dragInfoRef.current.row}`,
-      currentSection: dragInfo && `${dragInfo.section}-${dragInfo.row}`,
-      originalSection: currentSectionRow,
-      // info: dragInfoRef.current,
-      info: dragInfo,
-    },
     offsetX,
     offsetY,
     startX,
@@ -266,10 +261,8 @@ export const Swimlane = <T extends object>({
     };
   };
 
-  // TODO: Drag n Drop
   const calcSectionHover = useCallback(
     (y: number) => {
-      // if (dragInfoRef.current) {
       if (dragInfo) {
         const el = find(
           sectionsInfoRef.current,
@@ -287,10 +280,17 @@ export const Swimlane = <T extends object>({
 
   const animatedMove = useAnimatedStyle(() => ({
     transform: [{ translateX: offsetX.value }, { translateY: offsetY.value }],
+    top: shadowItemY.value,
+    left: shadowItemX.value,
   }));
 
   useAnimatedReaction(
-    () => offsetY.value + boardYStart.value + startY.value,
+    () =>
+      offsetY.value +
+      boardYStart.value +
+      startY.value +
+      verticalOffset.value -
+      verticalStartDragOffset.value,
     (result) => {
       runOnJS(calcSectionHover)(result);
     },
@@ -302,10 +302,10 @@ export const Swimlane = <T extends object>({
       return {
         _isDragging: isDragging.value,
         visibleScrollWidth: horizontalScrollSize.value,
-        isScrollingAnimating: horizontalAnimating.value,
+        isScrollingAnimating: scrollingAnimating.value,
         offsetScrollX: horizontalOffset.value,
-        horizontalMaxContentOffset: horizontalContentMaxOffset.value,
-        _screenOffsetX: screenOffsetX,
+        maxOffset: horizontalContentMaxOffset.value,
+        _screenOffsetX: screenOffsetX.value,
       };
     },
     ({
@@ -313,7 +313,7 @@ export const Swimlane = <T extends object>({
       isScrollingAnimating,
       offsetScrollX,
       visibleScrollWidth,
-      horizontalMaxContentOffset,
+      maxOffset,
       _screenOffsetX,
     }) => {
       if (_isDragging) {
@@ -321,30 +321,30 @@ export const Swimlane = <T extends object>({
 
         if (!isScrollingAnimating && visibleScrollWidth > 0) {
           if (
-            _screenOffsetX.value > visibleScrollWidth - 100 &&
-            offsetScrollX < horizontalMaxContentOffset
+            _screenOffsetX > visibleScrollWidth - 100 &&
+            offsetScrollX < maxOffset
           ) {
-            horizontalAnimating.value = true;
+            scrollingAnimating.value = true;
             horizontalOffset.value = withTiming(
               offsetScrollX + 100,
               { duration: 100 },
               () => {
-                horizontalAnimating.value = false;
+                scrollingAnimating.value = false;
               }
             );
-          } else if (_screenOffsetX.value < 100 && offsetScrollX > 0) {
-            horizontalAnimating.value = true;
+          } else if (_screenOffsetX < 100 && offsetScrollX > 0) {
+            scrollingAnimating.value = true;
             horizontalOffset.value = withTiming(
               offsetScrollX - 100,
               { duration: 100 },
               () => {
-                horizontalAnimating.value = false;
+                scrollingAnimating.value = false;
               }
             );
           }
 
-          if (offsetScrollX > horizontalMaxContentOffset) {
-            horizontalOffset.value = horizontalMaxContentOffset;
+          if (offsetScrollX > maxOffset) {
+            horizontalOffset.value = maxOffset;
           }
           if (offsetScrollX < 0) {
             horizontalOffset.value = 0;
@@ -353,6 +353,46 @@ export const Swimlane = <T extends object>({
       }
     },
     [dragInfo]
+  );
+
+  useAnimatedReaction(
+    () => ({
+      _isDragging: isDragging.value,
+      _verticalOffset: verticalOffset.value,
+      maxOffset: verticalContentMaxOffset.value,
+      oldOffset: verticalStartDragOffset.value,
+      _screenOffsetY: screenOffsetY.value,
+      visibleScrollHeight: verticalScrollSize.value,
+      isScrolling: scrollingAnimating.value,
+    }),
+    ({
+      _screenOffsetY,
+      _isDragging,
+      visibleScrollHeight,
+      _verticalOffset,
+      maxOffset,
+      isScrolling,
+    }) => {
+      if (_isDragging) {
+        if (!isScrolling) {
+          scrollTo(sectionListRef as any, 0, _verticalOffset, false);
+        }
+
+        if (
+          _screenOffsetY > visibleScrollHeight - 200 &&
+          _verticalOffset < maxOffset
+        ) {
+          scrollingAnimating.value = true;
+          verticalOffset.value = withTiming(
+            _verticalOffset + 100,
+            { duration: 100 },
+            () => {
+              scrollingAnimating.value = false;
+            }
+          );
+        }
+      }
+    }
   );
 
   const onRefChange = useCallback((ref) => {
@@ -399,22 +439,26 @@ export const Swimlane = <T extends object>({
     <DraggableContext.Provider value={dragContext}>
       <GestureHandlerRootView>
         <View
-          onLayout={({ nativeEvent }) =>
-            (horizontalScrollSize.value = nativeEvent.layout.width)
-          }
+          onLayout={({ nativeEvent }) => {
+            horizontalScrollSize.value = nativeEvent.layout.width;
+            verticalScrollSize.value = nativeEvent.layout.height;
+          }}
           ref={onRefChange}
         >
           <Animated.ScrollView
             style={styles.scrollView}
             horizontal={true}
             onScrollEndDrag={({ nativeEvent }) => {
-              if (horizontalAnimating.value) {
+              if (scrollingAnimating.value) {
                 horizontalOffset.value = nativeEvent.contentOffset.x;
               }
             }}
             onScroll={scrollHandler}
             ref={horizontalScrollRef}
             scrollEventThrottle={16}
+            onContentSizeChange={(_, height) => {
+              horizontalContentMaxOffset.value = height;
+            }}
           >
             <SectionList
               ref={sectionListRef}
@@ -434,7 +478,7 @@ export const Swimlane = <T extends object>({
                     onFrame={(frame) =>
                       onSectionFrame(item.sectionId, rowIndex, frame)
                     }
-                    cursorPositionX={newCurrentX}
+                    cursorPositionX={cursorPositionX}
                     columnWidth={columnWidth}
                     columnContentStyle={columnContentStyle}
                   />
@@ -454,18 +498,27 @@ export const Swimlane = <T extends object>({
                 </SectionHeader>
               )}
               stickySectionHeadersEnabled={false}
-              onScroll={({ nativeEvent }) =>
-                (verticalOffset.value = nativeEvent.contentOffset.y)
-              }
+              onScroll={({ nativeEvent }) => {
+                verticalOffset.value = nativeEvent.contentOffset.y;
+                const maxOffsetY =
+                  nativeEvent.contentSize.height -
+                  nativeEvent.layoutMeasurement.height;
+                verticalContentMaxOffset.value = maxOffsetY;
+
+                if (nativeEvent.contentOffset.y >= maxOffsetY) {
+                  verticalOffset.value = maxOffsetY;
+                }
+              }}
+              onContentSizeChange={(_, height) => {
+                verticalContentMaxOffset.value = height;
+              }}
             />
           </Animated.ScrollView>
           {dragInfo && (
             <Animated.View
               style={[
+                styles.shadowItem,
                 {
-                  position: 'absolute',
-                  top: dragInfo.startFrame.y - verticalOffset.value,
-                  left: dragInfo.startFrame.x - horizontalStartDragOffset.value,
                   width: dragInfo.startFrame.width,
                   height: dragInfo.startFrame.height,
                 },
@@ -477,10 +530,10 @@ export const Swimlane = <T extends object>({
               </View>
               <View
                 style={[
+                  styles.shadowItemContent,
                   columnContentStyle,
                   {
                     width: columnWidth,
-                    flexDirection: 'row',
                   },
                 ]}
               >
@@ -502,6 +555,8 @@ export const Swimlane = <T extends object>({
 const styles = StyleSheet.create({
   sectionList: { overflow: 'visible' },
   scrollView: { height: '100%' },
+  shadowItem: { position: 'absolute' },
+  shadowItemContent: { flexDirection: 'row' },
 });
 
 export const useDrag = () => React.useContext(DraggableContext);

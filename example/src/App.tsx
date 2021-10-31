@@ -15,28 +15,7 @@ export default function App() {
     sections: [],
   });
 
-  console.log('render');
-
   useEffect(() => {
-    // setTimeout(() => {
-    //   // console.log('update');
-    //   const sections: Section[] = [
-    //     { index: 0, title: '123', expanded: true },
-    //     { index: 1, title: '321', expanded: true },
-    //   ];
-    //   const columns: Column[] = [
-    //     { index: 0, title: 'COlumn 0' },
-    //     { index: 1, title: 'COlumn 1' },
-    //   ];
-    //   const items: KanbanItem<any>[] = [
-    //     { column: 0, section: 0, data: { value: 'item 1' } },
-    //     { column: 0, section: 0, data: { value: 'item 2' } },
-    //     { column: 1, section: 1, data: { value: 'item 3' } },
-    //     { column: 1, section: 1, data: { value: 'item 4' } },
-    //   ];
-    //   setData({ columns, sections, items });
-    // }, 3000);
-
     const sections: Section[] = [
       { index: 0, title: '123', expanded: true },
       { index: 1, title: '321', expanded: true },

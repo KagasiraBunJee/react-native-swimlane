@@ -89,7 +89,6 @@ export const SectionRow = <T extends object>({
   );
 
   useEffect(() => {
-    // console.log('cursorEntered', sectionId, rowIndex, cursorEntered);
     if (!cursorEntered) {
       setHoveredItem(null);
     }
