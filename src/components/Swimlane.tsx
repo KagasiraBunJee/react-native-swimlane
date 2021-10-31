@@ -41,8 +41,6 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const DraggableContext = React.createContext<DraggableContextProps>({
   dragCursorInfo: {
-    currentX: { value: 0 },
-    currentY: { value: 0 },
     horizontalOffset: { value: 0 },
     verticalOffset: { value: 0 },
     isDragging: false,
@@ -52,9 +50,15 @@ const DraggableContext = React.createContext<DraggableContextProps>({
   },
   startDrag: noop,
   endDrag: noop,
-  move: noop,
   onItemHover: noop,
   onItemFrame: noop,
+  offsetX: { value: 0 },
+  offsetY: { value: 0 },
+  startX: { value: 0 },
+  startY: { value: 0 },
+  screenOffsetX: { value: 0 },
+  screenOffsetY: { value: 0 },
+  isDragging: { value: false },
 });
 
 export const Swimlane = <T extends object>({
@@ -69,16 +73,26 @@ export const Swimlane = <T extends object>({
   emptyItem,
   renderSectionHeader,
   renderColumnItem,
+  onItemMoved,
 }: PropsWithChildren<ListProps<T>>): ReactElement | null => {
   const [_sections, setSections] = useState(sections);
   const [_data, setData] = useState<AlteredKanbanItem<T>[]>([]);
 
+  const isDragging = useSharedValue(false);
+
+  const boardXStart = useSharedValue(0);
+  const boardYStart = useSharedValue(0);
+
+  const screenOffsetX = useSharedValue(0);
+  const screenOffsetY = useSharedValue(0);
+
   const verticalOffset = useSharedValue(0);
 
   const horizontalScrollRef = useAnimatedRef<Animated.ScrollView>();
-  const horizontalScrollValue = useSharedValue(0);
   const horizontalOffset = useSharedValue(0);
   const horizontalAnimating = useSharedValue(false);
+  const horizontalContentMaxOffset = useSharedValue(0);
+  const horizontalStartDragOffset = useSharedValue(0);
 
   const sectionListRef = useAnimatedRef<SectionList>();
 
@@ -87,11 +101,6 @@ export const Swimlane = <T extends object>({
 
   const startX = useSharedValue(0);
   const startY = useSharedValue(0);
-
-  const scrollXOffset = useSharedValue(0);
-
-  const currentX = useSharedValue(0);
-  const currentY = useSharedValue(0);
 
   const horizontalScrollSize = useSharedValue(0);
 
@@ -142,70 +151,70 @@ export const Swimlane = <T extends object>({
   }, {});
 
   const savePosition = () => {
-    // const dragInfo = dragInfoRef.current;
     const targetPos = targetPositionRef?.current;
-    if (targetPos && dragInfo?.info) {
+    const isSelf =
+      targetPos?.column === dragInfo?.column &&
+      targetPos?.section === dragInfo?.section &&
+      targetPos?.row === dragInfo?.row;
+    if (targetPos && dragInfo?.info && !isSelf) {
       const dataToUpdate = _data.find((o) => o.id === dragInfo.info.id);
       const dataBeforeIndex = _data.findIndex((o) => o.id === targetPos.id);
       const newData = _data.filter((o) => o.id !== dragInfo.info.id);
       const indexToInsert =
-        dataBeforeIndex === -1 ? newData.length : dataBeforeIndex;
+        dataBeforeIndex === -1
+          ? newData.length
+          : dataBeforeIndex > 0
+          ? dataBeforeIndex - 1
+          : 0;
       if (dataToUpdate) {
-        const updatedData = insert(newData, indexToInsert, dataToUpdate);
-        setData(
-          updatedData.map((o) => {
-            if (o.id === dragInfo.info.id) {
-              return {
-                ...o,
-                column: targetPos.column,
-                section: targetPos.section,
-              };
-            }
-            return o;
-          })
-        );
+        const updatedItem = {
+          ...dataToUpdate,
+          column: targetPos.column,
+          section: targetPos.section,
+        };
+        const updatedData = insert(newData, indexToInsert, updatedItem);
+        const itemBefore = updatedData?.[indexToInsert - 1];
+        const itemAfter = updatedData?.[indexToInsert + 1];
+        onItemMoved &&
+          onItemMoved(
+            { column: dragInfo.column, section: dragInfo.section },
+            { column: targetPos.column, section: targetPos.section },
+            itemBefore,
+            itemAfter
+          );
+        setData(updatedData);
       }
-      // dragInfoRef.current = null;
       setDragInfo(null);
     }
   };
 
   const newCurrentX = useDerivedValue(() => {
-    return currentX.value + horizontalOffset.value;
+    return (
+      offsetX.value +
+      startX.value +
+      horizontalOffset.value -
+      horizontalStartDragOffset.value
+    );
   });
 
   const dragContext: DraggableContextProps = {
     startDrag: (props) => {
       setDragInfo(props);
-      horizontalScrollValue.value = horizontalOffset.value;
-      // dragInfoRef.current = props;
+      isDragging.value = true;
+      horizontalStartDragOffset.value = horizontalOffset.value;
     },
     endDrag: () => {
-      console.log('saving to new location', targetPositionRef.current);
       savePosition();
       offsetX.value = 0;
       offsetY.value = 0;
 
       setCurrentSectionRow(null);
       sectionsInfoRef.current = {};
-      scrollXOffset.value = 0;
-
-      currentX.value = 0;
-      currentY.value = 0;
 
       horizontalAnimating.value = false;
-      horizontalScrollValue.value = horizontalOffset.value;
       setDragInfo(null);
-    },
-    move: (x, y, _startX, _startY) => {
-      offsetX.value = x;
-      offsetY.value = y;
 
-      startX.value = _startX;
-      startY.value = _startY;
-
-      currentX.value = x + _startX;
-      currentY.value = y + _startX;
+      isDragging.value = false;
     },
     onItemHover: (column, section, row, id) => {
       // moveItem(section, column, row);
@@ -214,8 +223,6 @@ export const Swimlane = <T extends object>({
     },
     onItemFrame: noop,
     dragCursorInfo: {
-      currentX: newCurrentX,
-      currentY,
       horizontalOffset,
       verticalOffset: horizontalOffset,
       // isDragging: dragInfoRef.current !== null,
@@ -228,6 +235,13 @@ export const Swimlane = <T extends object>({
       // info: dragInfoRef.current,
       info: dragInfo,
     },
+    offsetX,
+    offsetY,
+    startX,
+    startY,
+    screenOffsetX,
+    screenOffsetY,
+    isDragging,
   };
 
   const onSectionFrame = (
@@ -239,6 +253,12 @@ export const Swimlane = <T extends object>({
     if (!dataExists) {
       return;
     }
+
+    if (sectionId === 0 && row === 0) {
+      boardXStart.value = frame.x;
+      boardYStart.value = frame.y;
+    }
+
     sectionsInfoRef.current = {
       ...sectionsInfoRef.current,
       [`${sectionId}-${row}`]: { frame, row, sectionId },
@@ -246,48 +266,69 @@ export const Swimlane = <T extends object>({
   };
 
   // TODO: Drag n Drop
-  const calcSectionHover = (x: number, y: number) => {
-    // if (dragInfoRef.current) {
-    if (dragInfo) {
-      const el = find(
-        sectionsInfoRef.current,
-        (item) => y > item.frame.y && y <= item.frame.y + item.frame.height
-      );
-      if (el) {
-        if (currentSectionRow !== `${el.sectionId}-${el.row}`) {
-          setCurrentSectionRow(`${el.sectionId}-${el.row}`);
+  const calcSectionHover = useCallback(
+    (y: number) => {
+      // if (dragInfoRef.current) {
+      if (dragInfo) {
+        const el = find(
+          sectionsInfoRef.current,
+          (item) => y > item.frame.y && y <= item.frame.y + item.frame.height
+        );
+        if (el) {
+          if (currentSectionRow !== `${el.sectionId}-${el.row}`) {
+            setCurrentSectionRow(`${el.sectionId}-${el.row}`);
+          }
         }
       }
-    }
-  };
+    },
+    [dragInfo, currentSectionRow]
+  );
 
   const animatedMove = useAnimatedStyle(() => ({
     transform: [{ translateX: offsetX.value }, { translateY: offsetY.value }],
   }));
 
   useDerivedValue(() => {
-    scrollTo(horizontalScrollRef, horizontalScrollValue.value, 0, false);
+    if (isDragging.value) {
+      scrollTo(horizontalScrollRef, horizontalOffset.value, 0, false);
 
-    const _offset = startX.value - horizontalScrollValue.value + offsetX.value;
-    // console.log('scrollTo', startX.value, horizontalOffset.value, offsetX.value);
-    if (!horizontalAnimating.value && horizontalScrollSize.value > 0) {
-      if (_offset > horizontalScrollSize.value - 100) {
-        horizontalAnimating.value = true;
+      if (!horizontalAnimating.value && horizontalScrollSize.value > 0) {
+        if (screenOffsetX.value > horizontalScrollSize.value - 100) {
+          horizontalAnimating.value = true;
 
-        horizontalScrollValue.value = withTiming(
-          horizontalScrollValue.value + 100,
-          { duration: 700 },
-          () => {
-            horizontalAnimating.value = false;
+          if (horizontalOffset.value <= horizontalContentMaxOffset.value) {
+            horizontalOffset.value = withTiming(
+              horizontalOffset.value + 100,
+              { duration: 100 },
+              () => {
+                horizontalAnimating.value = false;
+              }
+            );
+          } else {
+            console.log(1, 'setting to max');
+            horizontalOffset.value = horizontalContentMaxOffset.value;
           }
-        );
+        }
+        // else if (screenOffsetX.value < 100 && horizontalOffset.value > 0) {
+        //   console.log(1, 'setting to 0');
+        //   if (horizontalOffset.value > 0) {
+        //     horizontalOffset.value = withTiming(
+        //       horizontalOffset.value - 100,
+        //       { duration: 100 },
+        //       () => {
+        //         horizontalAnimating.value = false;
+        //       }
+        //     );
+        //   } else {
+        //     console.log(1, 'setting to 0');
+        //     horizontalOffset.value = 0;
+        //   }
+        // }
       }
+      const currentY = offsetY.value + boardYStart.value + startY.value;
+      runOnJS(calcSectionHover)(currentY);
     }
-    runOnJS(calcSectionHover)(
-      currentX.value + horizontalScrollValue.value,
-      currentY.value + offsetY.value
-    );
-  }, [horizontalScrollValue.value, dragInfo]);
+  }, [dragInfo]);
 
   const onRefChange = useCallback((ref) => {
     setContainerView(ref);
@@ -312,16 +353,22 @@ export const Swimlane = <T extends object>({
   }, [JSON.stringify(computedData)]);
 
   useEffect(() => {
-    console.log('useeffect data');
     setSections(sections);
 
     const transformedData = data.map((val) => ({ ...val, id: uniqueId() }));
     setData(transformedData);
   }, [sections, data]);
 
-  const scrollHandler = useAnimatedScrollHandler((event) => {
-    horizontalOffset.value = event.contentOffset.x;
-  });
+  const scrollHandler = useAnimatedScrollHandler(
+    ({ contentOffset, contentSize, layoutMeasurement }) => {
+      horizontalOffset.value = contentOffset.x;
+      const maxOffsetX = contentSize.width - layoutMeasurement.width;
+      horizontalContentMaxOffset.value = maxOffsetX;
+      if (contentOffset.x >= maxOffsetX) {
+        horizontalOffset.value = maxOffsetX;
+      }
+    }
+  );
 
   return (
     <DraggableContext.Provider value={dragContext}>
@@ -393,7 +440,7 @@ export const Swimlane = <T extends object>({
                 {
                   position: 'absolute',
                   top: dragInfo.startFrame.y - verticalOffset.value,
-                  left: dragInfo.startFrame.x - horizontalOffset.value,
+                  left: dragInfo.startFrame.x - horizontalStartDragOffset.value,
                   width: dragInfo.startFrame.width,
                   height: dragInfo.startFrame.height,
                 },

@@ -24,6 +24,7 @@ export const SectionRow = <T extends object>({
   renderItem,
   emptyItem,
   onFrame = noop,
+  cursorPositionX = { value: 0 },
 }: PropsWithChildren<SectionRowProps<T>>): ReactElement | null => {
   const [localItems, setItems] = useState(items);
   const ref = useRef<View>(null);
@@ -31,7 +32,7 @@ export const SectionRow = <T extends object>({
   const itemsRef = useRef<
     Record<string, { columnId: number; frame: LayoutRectangle }>
   >({});
-  const { dragCursorInfo, onItemHover } = useDrag();
+  const { onItemHover, isDragging } = useDrag();
   const isMounted = useRef(false);
 
   const onFrameChange = (frame: LayoutRectangle, index: number, id: string) => {
@@ -48,7 +49,7 @@ export const SectionRow = <T extends object>({
     if (!isMounted.current) {
       return;
     }
-    if (cursorEntered) {
+    if (cursorEntered && isDragging.value) {
       const item = find(
         itemsRef.current,
         (_item) => x >= _item.frame.x && x <= _item.frame.x + _item.frame.width
@@ -65,14 +66,16 @@ export const SectionRow = <T extends object>({
   };
 
   useDerivedValue(() => {
-    if (dragCursorInfo?.isDragging) {
-      if (!isMounted.current) {
-        return;
-      }
-      // console.log('SectionRow useAnimatedReaction', curr.value);
-      runOnJS(searchItemHover)(dragCursorInfo?.currentX.value);
+    if (!isMounted.current) {
+      return;
     }
-  });
+
+    runOnJS(searchItemHover)(cursorPositionX.value);
+
+    if (!isDragging.value) {
+      runOnJS(setHoveredItem)(null);
+    }
+  }, [cursorEntered]);
 
   useEffect(() => {
     // console.log('cursorEntered', sectionId, rowIndex, cursorEntered);
@@ -82,9 +85,9 @@ export const SectionRow = <T extends object>({
   }, [cursorEntered]);
 
   useEffect(() => {
-    console.log('items updated', items, sectionId, rowIndex, itemsRef);
     itemsRef.current = {};
     setItems(items);
+    setHoveredItem(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(items)]);
 
@@ -107,10 +110,7 @@ export const SectionRow = <T extends object>({
 
   return (
     <View style={[styles.dropInContainer]}>
-      <View
-        ref={ref}
-        style={[styles.dropInWrapper, { backgroundColor: 'blue' }]}
-      >
+      <View ref={ref} style={[styles.dropInWrapper]}>
         {localItems.map((row, index) => {
           return (
             <DropInViewComponent

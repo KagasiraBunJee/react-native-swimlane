@@ -40,12 +40,20 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
 }) => {
   const x = useSharedValue(0);
   const y = useSharedValue(0);
-  const startPosition = useSharedValue({ x: 0, y: 0 });
   const pressed = useSharedValue(false);
   const rootRef = useRef<View>(null);
   const originFrame = useSharedValue<LayoutRectangle | null>(null);
-  const { startDrag, endDrag, move, onItemFrame } = useDrag();
-  const focus = useSharedValue(canDropIn);
+  const {
+    startDrag,
+    endDrag,
+    onItemFrame,
+    offsetX,
+    offsetY,
+    startX,
+    startY,
+    screenOffsetX,
+    screenOffsetY,
+  } = useDrag();
   const isMounted = useRef(false);
 
   const calcSize = () => {
@@ -95,21 +103,30 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
       pressed.value = true;
       // onDragStart();
       runOnJS(prepareToDrag)();
+      startX.value = originFrame.value?.x || 0;
+      startY.value = originFrame.value?.y || 0;
     },
     onActive: (event) => {
-      x.value = startPosition.value.x + event.translationX;
-      y.value = startPosition.value.y + event.translationY;
-      runOnJS(move)(
-        x.value,
-        y.value,
-        originFrame.value?.x || 0,
-        originFrame.value?.y || 0
-      );
+      offsetX.value = event.translationX;
+      offsetY.value = event.translationY;
+
+      x.value = event.translationX;
+      y.value = event.translationY;
+
+      screenOffsetX.value = event.absoluteX;
+      screenOffsetY.value = event.absoluteY;
     },
     onEnd: () => {
       pressed.value = false;
       x.value = 0;
       y.value = 0;
+
+      offsetX.value = 0;
+      offsetY.value = 0;
+
+      screenOffsetX.value = 0;
+      screenOffsetY.value = 0;
+
       runOnJS(endDrag)();
       runOnJS(calcSize)();
     },
@@ -131,20 +148,19 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
 
   const animatedHover = useAnimatedStyle(() => {
     return {
-      paddingTop: focus.value ? 100 : 0,
-      backgroundColor: focus.value ? 'green' : 'transparent',
+      backgroundColor: canDropIn ? 'green' : 'transparent',
     };
   }, [canDropIn]);
 
   useEffect(() => {
     pressed.value = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [column, section, row]);
+  }, [column, section, JSON.stringify(row), rowIndex]);
 
   useEffect(() => {
     calcSize();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [parentView, rootRef.current, column, section, row, endDrag]);
+  }, [parentView, rootRef.current, column, section, endDrag, rowIndex]);
 
   useEffect(() => {
     isMounted.current = true;

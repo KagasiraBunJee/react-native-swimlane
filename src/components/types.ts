@@ -27,8 +27,8 @@ interface ItemRenderer<T> {
 }
 
 export interface Target {
-  section: Section;
-  column: Column;
+  section: Section['index'];
+  column: Column['index'];
 }
 
 export interface ListProps<T> extends ItemRenderer<T> {
@@ -36,12 +36,17 @@ export interface ListProps<T> extends ItemRenderer<T> {
   sections: Section[];
   data: KanbanItem<T>[];
   emptyRows?: number;
-  renderSectionHeader: (section: any) => React.ReactNode;
-  renderColumnItem: (column: Column, index: number) => React.ReactNode;
-  onItemMoved: (from: Target, to: Target) => void;
   columnContentStyle?: ColumnContentStyle;
   columnWidth?: number;
   columnHeaderContainerStyle?: StyleProp<ViewStyle>;
+  renderSectionHeader: (section: any) => React.ReactNode;
+  renderColumnItem: (column: Column, index: number) => React.ReactNode;
+  onItemMoved: (
+    from: Target,
+    to: Target,
+    itemBefore?: AlteredKanbanItem<T>,
+    itemAfter?: AlteredKanbanItem<T>
+  ) => void;
 }
 
 export interface DraggableContextInfo {
@@ -53,8 +58,6 @@ export interface DraggableContextInfo {
 }
 
 export interface DragCursorInfo {
-  currentX: Animated.SharedValue<number>;
-  currentY: Animated.SharedValue<number>;
   horizontalOffset: Animated.SharedValue<number>;
   verticalOffset: Animated.SharedValue<number>;
   isDragging: boolean;
@@ -64,15 +67,16 @@ export interface DragCursorInfo {
 }
 
 export interface DraggableContextProps {
+  offsetX: Animated.SharedValue<number>;
+  offsetY: Animated.SharedValue<number>;
+  startX: Animated.SharedValue<number>;
+  startY: Animated.SharedValue<number>;
+  screenOffsetX: Animated.SharedValue<number>;
+  screenOffsetY: Animated.SharedValue<number>;
+  isDragging: Animated.SharedValue<boolean>;
   dragCursorInfo: DragCursorInfo;
   startDrag: (props: DraggableContextInfo) => void;
   endDrag: () => void;
-  move: (
-    offsetX: number,
-    offsetY: number,
-    startX: number,
-    startY: number
-  ) => void;
   onItemHover: (
     column: number,
     section: number,
