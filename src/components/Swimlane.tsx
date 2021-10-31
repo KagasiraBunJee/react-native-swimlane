@@ -27,6 +27,7 @@ import Animated, {
   useAnimatedRef,
   scrollTo,
   withTiming,
+  useAnimatedReaction,
 } from 'react-native-reanimated';
 import type {
   AlteredKanbanItem,
@@ -288,47 +289,73 @@ export const Swimlane = <T extends object>({
     transform: [{ translateX: offsetX.value }, { translateY: offsetY.value }],
   }));
 
-  useDerivedValue(() => {
-    if (isDragging.value) {
-      scrollTo(horizontalScrollRef, horizontalOffset.value, 0, false);
+  useAnimatedReaction(
+    () => offsetY.value + boardYStart.value + startY.value,
+    (result) => {
+      runOnJS(calcSectionHover)(result);
+    },
+    [dragInfo]
+  );
 
-      if (!horizontalAnimating.value && horizontalScrollSize.value > 0) {
-        if (screenOffsetX.value > horizontalScrollSize.value - 100) {
-          horizontalAnimating.value = true;
+  useAnimatedReaction(
+    () => {
+      return {
+        _isDragging: isDragging.value,
+        visibleScrollWidth: horizontalScrollSize.value,
+        isScrollingAnimating: horizontalAnimating.value,
+        offsetScrollX: horizontalOffset.value,
+        horizontalMaxContentOffset: horizontalContentMaxOffset.value,
+        _screenOffsetX: screenOffsetX,
+      };
+    },
+    ({
+      _isDragging,
+      isScrollingAnimating,
+      offsetScrollX,
+      visibleScrollWidth,
+      horizontalMaxContentOffset,
+      _screenOffsetX,
+    }) => {
+      if (_isDragging) {
+        scrollTo(horizontalScrollRef, offsetScrollX, 0, false);
 
-          if (horizontalOffset.value <= horizontalContentMaxOffset.value) {
-            horizontalOffset.value = withTiming(
-              horizontalOffset.value + 100,
-              { duration: 100 },
-              () => {
-                horizontalAnimating.value = false;
-              }
-            );
-          } else {
-            console.log(1, 'setting to max');
-            horizontalOffset.value = horizontalContentMaxOffset.value;
+        if (!isScrollingAnimating && visibleScrollWidth > 0) {
+          if (_screenOffsetX.value > visibleScrollWidth - 100) {
+            horizontalAnimating.value = true;
+
+            if (offsetScrollX <= horizontalMaxContentOffset) {
+              horizontalOffset.value = withTiming(
+                offsetScrollX + 100,
+                { duration: 100 },
+                () => {
+                  horizontalAnimating.value = false;
+                }
+              );
+            } else {
+              console.log(1, 'setting to max');
+              horizontalOffset.value = horizontalMaxContentOffset;
+            }
           }
+          // else if (screenOffsetX.value < 100 && horizontalOffset.value > 0) {
+          //   console.log(1, 'setting to 0');
+          //   if (horizontalOffset.value > 0) {
+          //     horizontalOffset.value = withTiming(
+          //       horizontalOffset.value - 100,
+          //       { duration: 100 },
+          //       () => {
+          //         horizontalAnimating.value = false;
+          //       }
+          //     );
+          //   } else {
+          //     console.log(1, 'setting to 0');
+          //     horizontalOffset.value = 0;
+          //   }
+          // }
         }
-        // else if (screenOffsetX.value < 100 && horizontalOffset.value > 0) {
-        //   console.log(1, 'setting to 0');
-        //   if (horizontalOffset.value > 0) {
-        //     horizontalOffset.value = withTiming(
-        //       horizontalOffset.value - 100,
-        //       { duration: 100 },
-        //       () => {
-        //         horizontalAnimating.value = false;
-        //       }
-        //     );
-        //   } else {
-        //     console.log(1, 'setting to 0');
-        //     horizontalOffset.value = 0;
-        //   }
-        // }
       }
-      const currentY = offsetY.value + boardYStart.value + startY.value;
-      runOnJS(calcSectionHover)(currentY);
-    }
-  }, [dragInfo]);
+    },
+    [dragInfo]
+  );
 
   const onRefChange = useCallback((ref) => {
     setContainerView(ref);

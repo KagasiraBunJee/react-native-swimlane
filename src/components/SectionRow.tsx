@@ -8,7 +8,10 @@ import React, {
   PropsWithChildren,
 } from 'react';
 import { LayoutRectangle, StyleSheet, View } from 'react-native';
-import Animated, { runOnJS, useDerivedValue } from 'react-native-reanimated';
+import Animated, {
+  runOnJS,
+  useAnimatedReaction,
+} from 'react-native-reanimated';
 import { DropInViewComponent } from './DropInViewComponent';
 import { useDrag } from './Swimlane';
 import type { SectionRowProps } from './types';
@@ -65,17 +68,25 @@ export const SectionRow = <T extends object>({
     setHoveredItem(null);
   };
 
-  useDerivedValue(() => {
-    if (!isMounted.current) {
-      return;
-    }
+  useAnimatedReaction(
+    () => {
+      return {
+        _isDragging: isDragging.value,
+        posX: cursorPositionX.value,
+      };
+    },
+    ({ posX, _isDragging }) => {
+      if (!isMounted.current) {
+        return;
+      }
 
-    runOnJS(searchItemHover)(cursorPositionX.value);
+      runOnJS(searchItemHover)(posX);
 
-    if (!isDragging.value) {
-      runOnJS(setHoveredItem)(null);
+      if (!_isDragging) {
+        runOnJS(setHoveredItem)(null);
+      }
     }
-  }, [cursorEntered]);
+  );
 
   useEffect(() => {
     // console.log('cursorEntered', sectionId, rowIndex, cursorEntered);
