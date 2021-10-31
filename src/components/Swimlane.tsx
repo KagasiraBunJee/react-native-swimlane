@@ -320,37 +320,35 @@ export const Swimlane = <T extends object>({
         scrollTo(horizontalScrollRef, offsetScrollX, 0, false);
 
         if (!isScrollingAnimating && visibleScrollWidth > 0) {
-          if (_screenOffsetX.value > visibleScrollWidth - 100) {
+          if (
+            _screenOffsetX.value > visibleScrollWidth - 100 &&
+            offsetScrollX < horizontalMaxContentOffset
+          ) {
             horizontalAnimating.value = true;
-
-            if (offsetScrollX <= horizontalMaxContentOffset) {
-              horizontalOffset.value = withTiming(
-                offsetScrollX + 100,
-                { duration: 100 },
-                () => {
-                  horizontalAnimating.value = false;
-                }
-              );
-            } else {
-              console.log(1, 'setting to max');
-              horizontalOffset.value = horizontalMaxContentOffset;
-            }
+            horizontalOffset.value = withTiming(
+              offsetScrollX + 100,
+              { duration: 100 },
+              () => {
+                horizontalAnimating.value = false;
+              }
+            );
+          } else if (_screenOffsetX.value < 100 && offsetScrollX > 0) {
+            horizontalAnimating.value = true;
+            horizontalOffset.value = withTiming(
+              offsetScrollX - 100,
+              { duration: 100 },
+              () => {
+                horizontalAnimating.value = false;
+              }
+            );
           }
-          // else if (screenOffsetX.value < 100 && horizontalOffset.value > 0) {
-          //   console.log(1, 'setting to 0');
-          //   if (horizontalOffset.value > 0) {
-          //     horizontalOffset.value = withTiming(
-          //       horizontalOffset.value - 100,
-          //       { duration: 100 },
-          //       () => {
-          //         horizontalAnimating.value = false;
-          //       }
-          //     );
-          //   } else {
-          //     console.log(1, 'setting to 0');
-          //     horizontalOffset.value = 0;
-          //   }
-          // }
+
+          if (offsetScrollX > horizontalMaxContentOffset) {
+            horizontalOffset.value = horizontalMaxContentOffset;
+          }
+          if (offsetScrollX < 0) {
+            horizontalOffset.value = 0;
+          }
         }
       }
     },
