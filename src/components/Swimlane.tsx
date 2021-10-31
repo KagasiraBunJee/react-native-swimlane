@@ -390,6 +390,15 @@ export const Swimlane = <T extends object>({
               scrollingAnimating.value = false;
             }
           );
+        } else if (_screenOffsetY < 200 && _verticalOffset > 0) {
+          scrollingAnimating.value = true;
+          verticalOffset.value = withTiming(
+            _verticalOffset - 100,
+            { duration: 100 },
+            () => {
+              scrollingAnimating.value = false;
+            }
+          );
         }
       }
     }
