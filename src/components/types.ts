@@ -29,6 +29,7 @@ interface ItemRenderer<T> {
 export interface Target {
   section: Section['index'];
   column: Column['index'];
+  row: number;
 }
 
 export interface ListProps<T> extends ItemRenderer<T> {

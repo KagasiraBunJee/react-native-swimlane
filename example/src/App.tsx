@@ -77,7 +77,9 @@ export default function App() {
             </View>
           );
         }}
-        onItemMoved={() => {}}
+        onItemMoved={(from, to, itemBefore, itemAfter) => {
+          console.log(from, to, itemBefore, itemAfter);
+        }}
         renderItem={(info, column, section, row) => {
           // const item = data.items.filter(
           //   (item) => item.column === column && item.section === section

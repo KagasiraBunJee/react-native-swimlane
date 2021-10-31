@@ -172,8 +172,16 @@ export const Swimlane = <T extends object>({
         const itemAfter = updatedData?.[indexToInsert + 1];
         onItemMoved &&
           onItemMoved(
-            { column: dragInfo.column, section: dragInfo.section },
-            { column: targetPos.column, section: targetPos.section },
+            {
+              column: dragInfo.column,
+              section: dragInfo.section,
+              row: dragInfo.row,
+            },
+            {
+              column: targetPos.column,
+              section: targetPos.section,
+              row: targetPos.row,
+            },
             itemBefore,
             itemAfter
           );
