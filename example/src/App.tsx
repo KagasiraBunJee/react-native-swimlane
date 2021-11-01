@@ -101,6 +101,14 @@ export default function App() {
           ) : null;
         }}
         columnContentStyle={{ marginHorizontal: 13 }}
+        draggingAreaStyle={() => ({
+          width: 100,
+          height: 100,
+          backgroundColor: 'green',
+          bottom: 10,
+          right: 10,
+        })}
+        enterCursorOffset={{ x: 40, y: 20 }}
       />
     </SafeAreaView>
   );
