@@ -107,9 +107,6 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
       offsetX.value = 0;
       offsetY.value = 0;
 
-      screenOffsetX.value = 0;
-      screenOffsetY.value = 0;
-
       runOnJS(endDrag)();
       runOnJS(calcSize)();
     },
