@@ -13,7 +13,15 @@ export type ColumnContentStyle = StyleProp<{
   marginHorizontal?: ViewStyle['marginHorizontal'];
 }>;
 
-interface ItemRenderer<T> {
+interface ItemStyled {
+  draggingAreaStyle?: (
+    columnIndex: number,
+    sectionIndex: number,
+    rowIndex: number
+  ) => ViewStyle;
+}
+
+interface ItemRenderer<T> extends ItemStyled {
   renderItem: (
     info: KanbanItem<T>,
     columnIndex: number,
@@ -25,11 +33,6 @@ interface ItemRenderer<T> {
     sectionIndex: number,
     rowIndex: number
   ) => React.ReactNode;
-  draggingAreaStyle?: (
-    columnIndex: number,
-    sectionIndex: number,
-    rowIndex: number
-  ) => ViewStyle;
 }
 
 export interface Target {
@@ -54,6 +57,7 @@ export interface ListProps<T> extends ItemRenderer<T> {
   renderSectionHeader: (section: any) => React.ReactNode;
   renderColumnItem: (column: Column, index: number) => React.ReactNode;
   onItemMoved: (
+    data: T,
     from: Target,
     to: Target,
     itemBefore?: AlteredKanbanItem<T>,
@@ -117,11 +121,6 @@ export interface AlteredKanbanItem<T> extends KanbanItem<T> {
   id: string;
 }
 
-export interface Draggable {
-  onDragStart?: (section: number, column: number) => void;
-  onDragEnd?: () => void;
-}
-
 export interface DataItem {
   column: number;
   section: number;
@@ -139,7 +138,7 @@ export interface SectionList<T> extends Section {
   data: SectionListData<T>[];
 }
 
-export type DraggableSectionRow<T> = ItemRenderer<T> & Draggable;
+export type DraggableSectionRow<T> = ItemRenderer<T>;
 
 export interface SectionRowProps<T> extends DraggableSectionRow<T> {
   items: SectionListData<T>['items'];
@@ -169,7 +168,7 @@ export interface SectionRowCoord {
   row: number;
 }
 
-export interface DropInViewProps extends Draggable {
+export interface DropInViewProps extends ItemStyled {
   column: number;
   section: number;
   rowIndex: number;

@@ -60,7 +60,7 @@ export default function App() {
         data={data.items}
         emptyItem={() => {
           return (
-            <View>
+            <View style={{ marginVertical: 10, height: 70, width: 70 }}>
               <Text>Empty item</Text>
             </View>
           );
@@ -77,12 +77,22 @@ export default function App() {
             </View>
           );
         }}
-        onItemMoved={(from, to, itemBefore, itemAfter) => {
-          console.log(from, to, itemBefore, itemAfter);
+        onItemMoved={(_data, from, to, itemBefore, itemAfter) => {
+          console.log(_data, from, to, itemBefore, itemAfter);
         }}
         renderItem={(info, column, section, row) => {
+          // const item = data.items.filter(
+          //   (item) => item.column === column && item.section === section
+          // )?.[row];
           return info ? (
-            <View>
+            <View
+              style={{
+                backgroundColor: 'red',
+                marginVertical: 10,
+                height: 300,
+                width: 290,
+              }}
+            >
               <Text>
                 {column}-{section}-{row}
               </Text>
