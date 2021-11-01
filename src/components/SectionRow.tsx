@@ -1,7 +1,6 @@
 import find from 'lodash/find';
 import noop from 'lodash/noop';
 import React, {
-  useCallback,
   useEffect,
   useRef,
   useState,
@@ -14,110 +13,128 @@ import Animated, {
   useAnimatedReaction,
 } from 'react-native-reanimated';
 import { DropInViewComponent } from './DropInViewComponent';
+import { useDrag } from './Swimlane';
 import type { SectionRowProps } from './types';
 
 export const SectionRow = <T extends object>({
   sectionId,
   rowIndex,
-  items,
+  items = [],
   cursorEntered = false,
-  cursorPositionX,
-  renderItem,
-  emptyItem,
-  onFrame = noop,
-  onDragStart = noop,
-  onDragEnd = noop,
   parentView,
   columnWidth,
   columnContentStyle,
+  renderItem,
+  emptyItem,
+  onFrame = noop,
+  cursorPositionX = { value: 0 },
 }: PropsWithChildren<SectionRowProps<T>>): ReactElement | null => {
+  const [localItems, setItems] = useState(items);
   const ref = useRef<View>(null);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const itemsRef = useRef<
     Record<string, { columnId: number; frame: LayoutRectangle }>
   >({});
-  const sectionMaxHeight = useRef<number | null>(null);
-  const sectionOffsetY = useRef<number>(0);
+  const { onItemHover, isDragging } = useDrag();
+  const isMounted = useRef(false);
 
-  useEffect(() => {
-    if (parentView) {
-      ref?.current?.measureLayout(
-        parentView,
-        (x, y, width, height) => {
-          const frame: LayoutRectangle = { x, y, width, height };
-          if (!sectionMaxHeight.current) {
-            sectionMaxHeight.current = height;
-            sectionOffsetY.current = y;
-          }
-          onFrame(frame);
-        },
-        noop
-      );
+  const onFrameChange = (frame: LayoutRectangle, index: number, id: string) => {
+    if (hoveredItem === `${sectionId}-${index}`) {
+      return;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const onFrameChange = useCallback((frame, index) => {
     itemsRef.current = {
       ...itemsRef.current,
-      [index]: { columnId: index, frame },
+      [index]: { columnId: index, frame, id },
     };
-  }, []);
+  };
 
   const searchItemHover = (x: number) => {
-    if (cursorEntered) {
+    if (!isMounted.current) {
+      return;
+    }
+    if (cursorEntered && isDragging.value) {
       const item = find(
         itemsRef.current,
         (_item) => x >= _item.frame.x && x <= _item.frame.x + _item.frame.width
       );
       if (item) {
-        setHoveredItem(`${sectionId}-${item.columnId}`);
-      } else {
-        setHoveredItem(null);
+        if (hoveredItem !== `${sectionId}-${item.columnId}`) {
+          setHoveredItem(`${sectionId}-${item.columnId}`);
+          onItemHover(item.columnId, sectionId, rowIndex, item.id);
+        }
+        return;
       }
     }
+    setHoveredItem(null);
   };
 
   useAnimatedReaction(
-    () => cursorPositionX?.value,
-    (curr) => {
-      if (curr) {
-        runOnJS(searchItemHover)(curr);
+    () => {
+      return {
+        _isDragging: isDragging.value,
+        posX: cursorPositionX.value,
+      };
+    },
+    ({ posX, _isDragging }) => {
+      if (!isMounted.current) {
+        return;
+      }
+
+      runOnJS(searchItemHover)(posX);
+
+      if (!_isDragging) {
+        runOnJS(setHoveredItem)(null);
       }
     }
   );
 
-  const startDragging = (_row: number) => {
-    onDragStart();
-  };
+  useEffect(() => {
+    if (!cursorEntered) {
+      setHoveredItem(null);
+    }
+  }, [cursorEntered]);
 
-  const finishDragging = () => {
+  useEffect(() => {
+    itemsRef.current = {};
+    setItems(items);
     setHoveredItem(null);
-    onDragEnd();
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(items)]);
+
+  useEffect(() => {
+    isMounted.current = true;
+    if (parentView) {
+      ref?.current?.measureLayout(
+        parentView,
+        (x, y, width, height) => {
+          const frame: LayoutRectangle = { x, y, width, height };
+          onFrame(frame);
+        },
+        noop
+      );
+    }
+    return () => {
+      isMounted.current = false;
+    };
+  });
 
   return (
-    <View style={styles.dropInContainer}>
-      <View ref={ref} style={styles.dropInWrapper}>
-        {items.map((row, index) => {
+    <View style={[styles.dropInContainer]}>
+      <View ref={ref} style={[styles.dropInWrapper]}>
+        {localItems.map((row, index) => {
           return (
             <DropInViewComponent
               shouldAnimate={row ? true : false}
               key={index}
-              onLayout={(frame) => onFrameChange(frame, index)}
-              columnId={`${index}`}
-              height={sectionMaxHeight.current}
-              offsetY={sectionOffsetY.current}
-              sectionId={`${sectionId}`}
-              onDragStart={() => {
-                startDragging(index);
-              }}
+              column={index}
+              row={row}
+              section={sectionId}
+              rowIndex={rowIndex}
+              onLayout={(frame) => onFrameChange(frame, index, row?.id || '-1')}
               canBeDragged={row ? true : false}
               isDragging={false}
               canDropIn={hoveredItem === `${sectionId}-${index}`}
-              onDragEnd={() => {
-                finishDragging();
-              }}
+              parentView={parentView}
             >
               <Animated.View
                 style={[

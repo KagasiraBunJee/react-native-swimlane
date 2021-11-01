@@ -9,6 +9,7 @@ export type ColumnContentStyle = StyleProp<{
   paddingLeft?: ViewStyle['paddingLeft'];
   paddingRight?: ViewStyle['paddingRight'];
   backgroundColor?: ViewStyle['backgroundColor'];
+  marginHorizontal?: ViewStyle['marginHorizontal'];
 }>;
 
 interface ItemRenderer<T> {
@@ -25,25 +26,60 @@ interface ItemRenderer<T> {
   ) => React.ReactNode;
 }
 
+export interface Target {
+  section: Section['index'];
+  column: Column['index'];
+  row: number;
+}
+
 export interface ListProps<T> extends ItemRenderer<T> {
   columns: Column[];
   sections: Section[];
   data: KanbanItem<T>[];
   emptyRows?: number;
-  renderSectionHeader: (section: any) => React.ReactNode;
-  renderColumnItem: (column: Column, index: number) => React.ReactNode;
   columnContentStyle?: ColumnContentStyle;
   columnWidth?: number;
   columnHeaderContainerStyle?: StyleProp<ViewStyle>;
+  renderSectionHeader: (section: any) => React.ReactNode;
+  renderColumnItem: (column: Column, index: number) => React.ReactNode;
+  onItemMoved: (
+    from: Target,
+    to: Target,
+    itemBefore?: AlteredKanbanItem<T>,
+    itemAfter?: AlteredKanbanItem<T>
+  ) => void;
+}
+
+export interface DraggableContextInfo {
+  section: number;
+  column: number;
+  row: number;
+  info: any;
+  startFrame: { x: number; y: number; width: number; height: number };
 }
 
 export interface DraggableContextProps {
-  position: { x: 0; y: 0 };
-  setPosition: (x: number, y: number) => void;
-  setDraggableInfo: (
-    columnId: number,
-    sectionId: number,
-    sectionRow: number
+  offsetX: Animated.SharedValue<number>;
+  offsetY: Animated.SharedValue<number>;
+  startX: Animated.SharedValue<number>;
+  startY: Animated.SharedValue<number>;
+  screenOffsetX: Animated.SharedValue<number>;
+  screenOffsetY: Animated.SharedValue<number>;
+  isDragging: Animated.SharedValue<boolean>;
+  startDrag: (props: DraggableContextInfo) => void;
+  endDrag: () => void;
+  onItemHover: (
+    column: number,
+    section: number,
+    row: number,
+    id: string
+  ) => void;
+  onItemFrame: (
+    section: number,
+    column: number,
+    row: number,
+    id: string,
+    frame: LayoutRectangle
   ) => void;
 }
 
@@ -66,8 +102,12 @@ export interface KanbanItem<T> {
   data: T;
 }
 
+export interface AlteredKanbanItem<T> extends KanbanItem<T> {
+  id: string;
+}
+
 export interface Draggable {
-  onDragStart?: () => void;
+  onDragStart?: (section: number, column: number) => void;
   onDragEnd?: () => void;
 }
 
@@ -80,7 +120,7 @@ export interface DataItem {
 }
 
 export interface SectionListData<T> {
-  items: KanbanItem<T>[];
+  items: AlteredKanbanItem<T>[];
   sectionId: number;
 }
 
@@ -104,6 +144,7 @@ export interface SectionRowProps<T> extends DraggableSectionRow<T> {
   onItemEnter?: (sectionId: number, columnId: number) => void;
   onItemExit?: (sectionId: number, columnId: number) => void;
   onFrame?: (frame: LayoutRectangle) => void;
+  onUnmount?: (section: number, row: number) => void;
 }
 
 export interface Point {
