@@ -1,3 +1,4 @@
+import type { LegacyRef } from 'react';
 import type React from 'react';
 import type { LayoutRectangle, StyleProp, ViewStyle } from 'react-native';
 import type Animated from 'react-native-reanimated';
@@ -24,6 +25,11 @@ interface ItemRenderer<T> {
     sectionIndex: number,
     rowIndex: number
   ) => React.ReactNode;
+  draggingAreaStyle?: (
+    columnIndex: number,
+    sectionIndex: number,
+    rowIndex: number
+  ) => ViewStyle;
 }
 
 export interface Target {
@@ -40,6 +46,11 @@ export interface ListProps<T> extends ItemRenderer<T> {
   columnContentStyle?: ColumnContentStyle;
   columnWidth?: number;
   columnHeaderContainerStyle?: StyleProp<ViewStyle>;
+  horizontalScrollRef?: LegacyRef<Animated.ScrollView> | undefined;
+  verticalScrollRef?: LegacyRef<SectionList<any>> | undefined;
+  horizontalScrollEnabled?: boolean;
+  verticalScrollEnabled?: boolean;
+  enterCursorOffset?: { x: number; y: number };
   renderSectionHeader: (section: any) => React.ReactNode;
   renderColumnItem: (column: Column, index: number) => React.ReactNode;
   onItemMoved: (
@@ -156,4 +167,19 @@ export interface SectionRowCoord {
   sectionId: number;
   frame: LayoutRectangle;
   row: number;
+}
+
+export interface DropInViewProps extends Draggable {
+  column: number;
+  section: number;
+  rowIndex: number;
+  row: any;
+  parentView?: any;
+  canDropIn?: boolean;
+  onLayout?: (frame: LayoutRectangle, id: number) => void;
+  draggingAreaStyle?: (
+    columnIndex: number,
+    sectionIndex: number,
+    rowIndex: number
+  ) => ViewStyle;
 }

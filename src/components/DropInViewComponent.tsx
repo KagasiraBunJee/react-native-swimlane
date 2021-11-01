@@ -1,42 +1,26 @@
 import noop from 'lodash/noop';
 import React, { useEffect, useRef } from 'react';
-import { LayoutRectangle, Text, View } from 'react-native';
+import { LayoutRectangle, StyleSheet, View } from 'react-native';
 import Animated, {
   runOnJS,
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import type { Draggable } from './types';
+import type { DropInViewProps } from './types';
 import { PanGestureHandler } from 'react-native-gesture-handler';
 import { useDrag } from './Swimlane';
-
-interface DropInViewProps extends Draggable {
-  column: number;
-  section: number;
-  rowIndex: number;
-  row: any;
-  shouldAnimate: boolean;
-  isHovered?: boolean;
-  parentView?: any;
-  canDropIn?: boolean;
-  canBeDragged?: boolean;
-  isDragging?: boolean;
-  onLayout?: (frame: LayoutRectangle, id: number) => void;
-  onPosition?: (x: number, y: number) => void;
-  onDragStart?: () => void;
-  onDragEnd?: () => void;
-}
 
 export const DropInViewComponent: React.FC<DropInViewProps> = ({
   children,
   parentView,
-  onLayout = noop,
   column,
   section,
   row,
   rowIndex,
   canDropIn = false,
+  onLayout = noop,
+  draggingAreaStyle,
 }) => {
   const x = useSharedValue(0);
   const y = useSharedValue(0);
@@ -100,9 +84,8 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
 
   const eventHandler = useAnimatedGestureHandler({
     onStart: () => {
-      pressed.value = true;
-      // onDragStart();
       runOnJS(prepareToDrag)();
+      pressed.value = true;
       startX.value = originFrame.value?.x || 0;
       startY.value = originFrame.value?.y || 0;
     },
@@ -123,9 +106,6 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
 
       offsetX.value = 0;
       offsetY.value = 0;
-
-      screenOffsetX.value = 0;
-      screenOffsetY.value = 0;
 
       runOnJS(endDrag)();
       runOnJS(calcSize)();
@@ -173,16 +153,24 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
     <Animated.View style={[animatedHover]}>
       <View ref={rootRef}>
         <Animated.View style={[animatedStyle]}>
+          <View>{children}</View>
           {row && (
             <PanGestureHandler onGestureEvent={eventHandler}>
-              <Animated.View>
-                <Text>Drag</Text>
-              </Animated.View>
+              <Animated.View
+                style={[
+                  styles.draggableView,
+                  draggingAreaStyle &&
+                    draggingAreaStyle(column, section, rowIndex),
+                ]}
+              />
             </PanGestureHandler>
           )}
-          <View>{children}</View>
         </Animated.View>
       </View>
     </Animated.View>
   );
 };
+
+const styles = StyleSheet.create({
+  draggableView: { position: 'absolute' },
+});

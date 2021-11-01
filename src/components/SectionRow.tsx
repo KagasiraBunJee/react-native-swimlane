@@ -24,10 +24,11 @@ export const SectionRow = <T extends object>({
   parentView,
   columnWidth,
   columnContentStyle,
+  cursorPositionX = { value: 0 },
   renderItem,
   emptyItem,
   onFrame = noop,
-  cursorPositionX = { value: 0 },
+  draggingAreaStyle,
 }: PropsWithChildren<SectionRowProps<T>>): ReactElement | null => {
   const [localItems, setItems] = useState(items);
   const ref = useRef<View>(null);
@@ -124,17 +125,15 @@ export const SectionRow = <T extends object>({
         {localItems.map((row, index) => {
           return (
             <DropInViewComponent
-              shouldAnimate={row ? true : false}
               key={index}
               column={index}
               row={row}
               section={sectionId}
               rowIndex={rowIndex}
               onLayout={(frame) => onFrameChange(frame, index, row?.id || '-1')}
-              canBeDragged={row ? true : false}
-              isDragging={false}
               canDropIn={hoveredItem === `${sectionId}-${index}`}
               parentView={parentView}
+              draggingAreaStyle={draggingAreaStyle}
             >
               <Animated.View
                 style={[
