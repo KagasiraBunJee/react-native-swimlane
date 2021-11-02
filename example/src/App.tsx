@@ -108,7 +108,9 @@ export default function App() {
           bottom: 10,
           right: 10,
         })}
+        columnWidth={290}
         enterCursorOffset={{ x: 40, y: 20 }}
+        hoverStyle={{ backgroundColor: 'green' }}
       />
     </SafeAreaView>
   );

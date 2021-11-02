@@ -87,6 +87,7 @@ export interface DraggableContextProps {
   screenOffsetY: Animated.SharedValue<number>;
   isDragging: Animated.SharedValue<boolean>;
   hoverStyle?: ViewStyle;
+  children: React.MutableRefObject<React.ReactNode>;
   startDrag: (props: DraggableContextInfo) => void;
   endDrag: () => void;
   onItemHover: (

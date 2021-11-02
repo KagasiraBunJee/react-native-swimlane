@@ -6,6 +6,7 @@ import Animated, {
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
+  withTiming,
 } from 'react-native-reanimated';
 import type { DropInViewProps } from './types';
 import { PanGestureHandler } from 'react-native-gesture-handler';
@@ -38,6 +39,7 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
     screenOffsetX,
     screenOffsetY,
     hoverStyle,
+    children: _children,
   } = useDrag();
   const isMounted = useRef(false);
 
@@ -61,6 +63,7 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
   };
 
   const prepareToDrag = () => {
+    _children.current = children;
     pressed.value = true;
     rootRef.current?.measureLayout(
       parentView,
@@ -85,8 +88,8 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
 
   const eventHandler = useAnimatedGestureHandler({
     onStart: () => {
-      runOnJS(prepareToDrag)();
       pressed.value = true;
+      runOnJS(prepareToDrag)();
       startX.value = originFrame.value?.x || 0;
       startY.value = originFrame.value?.y || 0;
     },
@@ -115,7 +118,7 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
 
   const animatedStyle = useAnimatedStyle(() => {
     return {
-      opacity: pressed.value ? 0 : 1,
+      opacity: pressed.value ? withTiming(0, { duration: 400 }) : 1,
       transform: [
         {
           translateX: x.value,
@@ -146,6 +149,7 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
 
   return (
     <Animated.View>
+      {canDropIn && <View style={[styles.empty, hoverStyle]} />}
       <View ref={rootRef}>
         <Animated.View style={[animatedStyle]}>
           <View>{children}</View>
@@ -162,7 +166,6 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
           )}
         </Animated.View>
       </View>
-      {canDropIn && <View style={[styles.empty, hoverStyle]} />}
     </Animated.View>
   );
 };
