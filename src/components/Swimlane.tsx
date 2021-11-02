@@ -150,24 +150,63 @@ export const Swimlane = <T extends object>({
       targetPos?.section === dragInfo?.section &&
       targetPos?.row === dragInfo?.row;
     if (targetPos && dragInfo?.info && !isSelf) {
+      let itemBefore =
+        matrix?.[targetPos.section]?.[targetPos.column]?.[targetPos.row - 1];
+      const itemAfter =
+        matrix?.[targetPos.section]?.[targetPos.column]?.[targetPos.row];
+
+      const lengthInColumn = (
+        matrix?.[targetPos.section]?.[targetPos.column] || []
+      ).length;
+
+      const indexBefore = _data.findIndex((o) => o.id === itemBefore?.id);
+      const indexAfter =
+        indexBefore > -1
+          ? indexBefore
+          : _data.findIndex((o) => o.id === itemAfter?.id);
+
       const dataToUpdate = _data.find((o) => o.id === dragInfo.info.id);
-      const dataBeforeIndex = _data.findIndex((o) => o.id === targetPos.id);
       const newData = _data.filter((o) => o.id !== dragInfo.info.id);
-      const indexToInsert =
-        dataBeforeIndex === -1
-          ? newData.length
-          : dataBeforeIndex > 0
-          ? dataBeforeIndex - 1
-          : 0;
       if (dataToUpdate) {
         const updatedItem = {
           ...dataToUpdate,
           column: targetPos.column,
           section: targetPos.section,
         };
-        const updatedData = insert(newData, indexToInsert, updatedItem);
-        const itemBefore = updatedData?.[indexToInsert - 1];
-        const itemAfter = updatedData?.[indexToInsert + 1];
+
+        if (indexBefore > -1) {
+          const updatedData = insert(
+            newData,
+            Math.max(indexBefore + 1, 0),
+            updatedItem
+          );
+          setData(updatedData);
+        } else if (indexAfter > -1) {
+          const updatedData = insert(
+            newData,
+            Math.max(indexAfter - 1, 0),
+            updatedItem
+          );
+          setData(updatedData);
+        } else {
+          if (lengthInColumn > 0) {
+            itemBefore =
+              matrix?.[targetPos.section]?.[targetPos.column]?.[
+                lengthInColumn - 1
+              ];
+            const index = _data.findIndex((o) => o.id === itemBefore?.id);
+            const updatedData = insert(newData, index + 1, updatedItem);
+            setData(updatedData);
+          } else {
+            const columnIndex =
+              targetPos.column === 0 ? 0 : targetPos.column - 1;
+            const lengthInPrevious =
+              matrix?.[targetPos.section]?.[columnIndex].length;
+            const updatedData = insert(newData, lengthInPrevious, updatedItem);
+            setData(updatedData);
+          }
+        }
+
         onItemMoved &&
           onItemMoved(
             updatedItem.data,
@@ -184,7 +223,6 @@ export const Swimlane = <T extends object>({
             itemBefore,
             itemAfter
           );
-        setData(updatedData);
       }
       setDragInfo(null);
     }
