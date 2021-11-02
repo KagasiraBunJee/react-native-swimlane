@@ -37,6 +37,7 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
     startY,
     screenOffsetX,
     screenOffsetY,
+    hoverStyle,
   } = useDrag();
   const isMounted = useRef(false);
 
@@ -126,12 +127,6 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
     };
   });
 
-  const animatedHover = useAnimatedStyle(() => {
-    return {
-      backgroundColor: canDropIn ? 'green' : 'transparent',
-    };
-  }, [canDropIn]);
-
   useEffect(() => {
     pressed.value = false;
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,7 +145,7 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
   }, []);
 
   return (
-    <Animated.View style={[animatedHover]}>
+    <Animated.View>
       <View ref={rootRef}>
         <Animated.View style={[animatedStyle]}>
           <View>{children}</View>
@@ -167,10 +162,12 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
           )}
         </Animated.View>
       </View>
+      {canDropIn && <View style={[styles.empty, hoverStyle]} />}
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
   draggableView: { position: 'absolute' },
+  empty: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
 });
