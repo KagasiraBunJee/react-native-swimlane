@@ -351,8 +351,6 @@ export const Swimlane = <T extends object>({
       transform: [{ translateX: offsetX.value }, { translateY: offsetY.value }],
       top: shadowItemY.value,
       left: shadowItemX.value,
-      // width: dragInfo?.startFrame.width || 0,
-      // height: dragInfo?.startFrame.height || 0,
       opacity: dragInfo ? 1 : 0,
     }),
     [dragInfo]
