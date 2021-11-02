@@ -59,6 +59,11 @@ export const Swimlane = <T extends object>({
   horizontalScrollEnabled = true,
   verticalScrollEnabled = true,
   enterCursorOffset = { x: 0, y: 0 },
+  hoverStyle,
+  horizontalStartScrollLeftOffset = 100,
+  horizontalStartScrollRightOffset = 100,
+  verticalStartScrollBottomOffset = 100,
+  verticalStartScrollTopOffset = 100,
   draggingAreaStyle,
   renderItem,
   emptyItem,
@@ -287,6 +292,7 @@ export const Swimlane = <T extends object>({
     screenOffsetX,
     screenOffsetY,
     isDragging,
+    hoverStyle,
   };
 
   const onSectionFrame = (
@@ -371,7 +377,8 @@ export const Swimlane = <T extends object>({
 
         if (!isScrollingAnimating && visibleScrollWidth > 0) {
           if (
-            _screenOffsetX > visibleScrollWidth - 100 &&
+            _screenOffsetX >
+              visibleScrollWidth - horizontalStartScrollRightOffset &&
             offsetScrollX < maxOffset
           ) {
             scrollingAnimating.value = true;
@@ -382,7 +389,10 @@ export const Swimlane = <T extends object>({
                 scrollingAnimating.value = false;
               }
             );
-          } else if (_screenOffsetX < 100 && offsetScrollX > 0) {
+          } else if (
+            _screenOffsetX < horizontalStartScrollLeftOffset &&
+            offsetScrollX > 0
+          ) {
             scrollingAnimating.value = true;
             horizontalOffset.value = withTiming(
               offsetScrollX - 100,
@@ -402,7 +412,11 @@ export const Swimlane = <T extends object>({
         }
       }
     },
-    [dragInfo]
+    [
+      dragInfo,
+      horizontalStartScrollLeftOffset,
+      horizontalStartScrollRightOffset,
+    ]
   );
 
   useAnimatedReaction(
@@ -414,6 +428,7 @@ export const Swimlane = <T extends object>({
       _screenOffsetY: screenOffsetY.value,
       visibleScrollHeight: verticalScrollSize.value,
       isScrolling: scrollingAnimating.value,
+      _boardYStart: boardYStart.value,
     }),
     ({
       _screenOffsetY,
@@ -422,6 +437,7 @@ export const Swimlane = <T extends object>({
       _verticalOffset,
       maxOffset,
       isScrolling,
+      _boardYStart,
     }) => {
       if (_isDragging) {
         if (!isScrolling) {
@@ -429,7 +445,10 @@ export const Swimlane = <T extends object>({
         }
 
         if (
-          _screenOffsetY > visibleScrollHeight - 200 &&
+          _screenOffsetY >
+            visibleScrollHeight +
+              _boardYStart -
+              verticalStartScrollBottomOffset &&
           _verticalOffset < maxOffset
         ) {
           scrollingAnimating.value = true;
@@ -440,7 +459,10 @@ export const Swimlane = <T extends object>({
               scrollingAnimating.value = false;
             }
           );
-        } else if (_screenOffsetY < 200 && _verticalOffset > 0) {
+        } else if (
+          _screenOffsetY < verticalStartScrollTopOffset &&
+          _verticalOffset > 0
+        ) {
           scrollingAnimating.value = true;
           verticalOffset.value = withTiming(
             _verticalOffset - 100,
@@ -451,7 +473,8 @@ export const Swimlane = <T extends object>({
           );
         }
       }
-    }
+    },
+    [verticalStartScrollTopOffset, verticalStartScrollBottomOffset]
   );
 
   const onRefChange = useCallback((ref) => {

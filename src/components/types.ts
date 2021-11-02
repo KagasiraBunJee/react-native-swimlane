@@ -54,6 +54,11 @@ export interface ListProps<T> extends ItemRenderer<T> {
   horizontalScrollEnabled?: boolean;
   verticalScrollEnabled?: boolean;
   enterCursorOffset?: { x: number; y: number };
+  hoverStyle?: ViewStyle;
+  verticalStartScrollTopOffset?: number;
+  verticalStartScrollBottomOffset?: number;
+  horizontalStartScrollLeftOffset?: number;
+  horizontalStartScrollRightOffset?: number;
   renderSectionHeader: (section: any) => React.ReactNode;
   renderColumnItem: (column: Column, index: number) => React.ReactNode;
   onItemMoved: (
@@ -81,6 +86,7 @@ export interface DraggableContextProps {
   screenOffsetX: Animated.SharedValue<number>;
   screenOffsetY: Animated.SharedValue<number>;
   isDragging: Animated.SharedValue<boolean>;
+  hoverStyle?: ViewStyle;
   startDrag: (props: DraggableContextInfo) => void;
   endDrag: () => void;
   onItemHover: (
