@@ -11,7 +11,7 @@ import { View, LayoutRectangle, SectionList, StyleSheet } from 'react-native';
 import noop from 'lodash/noop';
 import find from 'lodash/find';
 import uniqueId from 'lodash/uniqueId';
-import debounce from 'lodash/debounce';
+import throttle from 'lodash/throttle';
 
 import Animated, {
   useSharedValue,
@@ -340,7 +340,7 @@ export const Swimlane = <T extends object>({
   );
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const debouncedChangeHandler = useCallback(debounce(calcSectionHover, 200), [
+  const debouncedChangeHandler = useCallback(throttle(calcSectionHover, 200), [
     dragInfo,
     currentSectionRow,
     enterCursorOffset.y,
