@@ -88,6 +88,8 @@ export interface DraggableContextProps {
   isDragging: Animated.SharedValue<boolean>;
   hoverStyle?: ViewStyle;
   children: React.MutableRefObject<React.ReactNode>;
+  scrollViewRef: React.RefObject<ScrollView>;
+  sectionListRef: React.RefObject<any>;
   startDrag: (props: DraggableContextInfo) => void;
   endDrag: () => void;
   onItemHover: (

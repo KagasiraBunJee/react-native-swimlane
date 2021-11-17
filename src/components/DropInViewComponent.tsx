@@ -1,15 +1,18 @@
 import noop from 'lodash/noop';
 import React, { useEffect, useRef } from 'react';
-import { LayoutRectangle, StyleSheet, View } from 'react-native';
+import {
+  LayoutRectangle,
+  PanResponder,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import Animated, {
-  runOnJS,
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import type { DropInViewProps } from './types';
-import { PanGestureHandler } from 'react-native-gesture-handler';
 import { useDrag } from './Swimlane';
 
 export const DropInViewComponent: React.FC<DropInViewProps> = ({
@@ -21,10 +24,7 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
   rowIndex,
   canDropIn = false,
   onLayout = noop,
-  draggingAreaStyle,
 }) => {
-  const x = useSharedValue(0);
-  const y = useSharedValue(0);
   const pressed = useSharedValue(false);
   const rootRef = useRef<View>(null);
   const originFrame = useSharedValue<LayoutRectangle | null>(null);
@@ -42,6 +42,70 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
     children: _children,
   } = useDrag();
   const isMounted = useRef(false);
+  const readyToPan = useSharedValue(false);
+  const hasMovedFinger = useSharedValue(false);
+
+  const localX = useSharedValue(0);
+  const localY = useSharedValue(0);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => false,
+      onMoveShouldSetPanResponder: () => Boolean(row),
+      onPanResponderMove: ({ nativeEvent }, { dx, dy }) => {
+        if (!hasMovedFinger.value) {
+          hasMovedFinger.value = true;
+        }
+        if (readyToPan.value) {
+          offsetX.value = withTiming(dx, { duration: 10 });
+          offsetY.value = withTiming(dy, { duration: 10 });
+
+          localX.value = withTiming(dx, { duration: 10 });
+          localY.value = withTiming(dy, { duration: 10 });
+
+          screenOffsetX.value = nativeEvent.pageX;
+          // screenOffsetY.value = nativeEvent.pageY;
+        }
+      },
+      onPanResponderRelease: () => {
+        hasMovedFinger.value = false;
+        if (readyToPan.value) {
+          readyToPan.value = false;
+          pressed.value = false;
+
+          offsetX.value = 0;
+          offsetY.value = 0;
+
+          localX.value = 0;
+          localY.value = 0;
+
+          screenOffsetX.value = 0;
+
+          endDrag();
+          calcSize();
+        }
+      },
+      onPanResponderEnd: () => {
+        hasMovedFinger.value = false;
+        if (readyToPan.value) {
+          readyToPan.value = false;
+          pressed.value = false;
+
+          offsetX.value = 0;
+          offsetY.value = 0;
+
+          localX.value = 0;
+          localY.value = 0;
+
+          screenOffsetX.value = 0;
+
+          endDrag();
+          calcSize();
+        }
+      },
+      onShouldBlockNativeResponder: () => false,
+    })
+  ).current;
 
   const calcSize = () => {
     if (parentView && rootRef.current) {
@@ -86,45 +150,15 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
     );
   };
 
-  const eventHandler = useAnimatedGestureHandler({
-    onStart: () => {
-      pressed.value = true;
-      runOnJS(prepareToDrag)();
-      startX.value = originFrame.value?.x || 0;
-      startY.value = originFrame.value?.y || 0;
-    },
-    onActive: (event) => {
-      offsetX.value = event.translationX;
-      offsetY.value = event.translationY;
-
-      x.value = event.translationX;
-      y.value = event.translationY;
-
-      screenOffsetX.value = event.absoluteX;
-      screenOffsetY.value = event.absoluteY;
-    },
-    onEnd: () => {
-      pressed.value = false;
-      x.value = 0;
-      y.value = 0;
-
-      offsetX.value = 0;
-      offsetY.value = 0;
-
-      runOnJS(endDrag)();
-      runOnJS(calcSize)();
-    },
-  });
-
   const animatedStyle = useAnimatedStyle(() => {
     return {
       opacity: pressed.value ? withTiming(0, { duration: 400 }) : 1,
       transform: [
         {
-          translateX: x.value,
+          translateX: withTiming(localX.value, { duration: 100 }),
         },
         {
-          translateY: y.value,
+          translateY: withTiming(localY.value, { duration: 100 }),
         },
       ],
     };
@@ -142,29 +176,30 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
 
   useEffect(() => {
     isMounted.current = true;
+
     return () => {
       isMounted.current = false;
     };
   }, []);
 
   return (
-    <Animated.View>
+    <Animated.View {...panResponder.panHandlers}>
       {canDropIn && <View style={[styles.empty, hoverStyle]} />}
       <View ref={rootRef}>
-        <Animated.View style={[animatedStyle]}>
-          <View>{children}</View>
-          {row && (
-            <PanGestureHandler onGestureEvent={eventHandler}>
-              <Animated.View
-                style={[
-                  styles.draggableView,
-                  draggingAreaStyle &&
-                    draggingAreaStyle(column, section, rowIndex),
-                ]}
-              />
-            </PanGestureHandler>
-          )}
-        </Animated.View>
+        <TouchableOpacity
+          disabled={!row}
+          onLongPress={() => {
+            pressed.value = true;
+            readyToPan.value = true;
+            prepareToDrag();
+            startX.value = originFrame.value?.x || 0;
+            startY.value = originFrame.value?.y || 0;
+          }}
+        >
+          <Animated.View style={[animatedStyle]}>
+            <View>{children}</View>
+          </Animated.View>
+        </TouchableOpacity>
       </View>
     </Animated.View>
   );

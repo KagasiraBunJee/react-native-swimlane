@@ -2,7 +2,19 @@ import React, { useState } from 'react';
 import { useEffect } from 'react';
 
 import { StyleSheet, View, Text, SafeAreaView } from 'react-native';
-import { Swimlane, Column, Section, KanbanItem } from 'react-native-swimlane';
+import { Swimlane, Column, Section, KanbanItem, LongPressButton } from 'react-native-swimlane';
+
+// export default function App() {
+//   return (
+//     <SafeAreaView
+//       style={{ alignItems: 'center', justifyContent: 'center', height: '100%' }}
+//     >
+//       <View>
+//         <LongPressButton />
+//       </View>
+//     </SafeAreaView>
+//   );
+// }
 
 export default function App() {
   const [data, setData] = useState<{
