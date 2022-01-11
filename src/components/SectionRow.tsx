@@ -66,7 +66,6 @@ export const SectionRow = <T extends object>({
         return;
       }
     }
-    setHoveredItem(null);
   };
 
   useAnimatedReaction(
