@@ -36,7 +36,7 @@ export const SectionRow = <T extends object>({
   const itemsRef = useRef<
     Record<string, { columnId: number; frame: LayoutRectangle }>
   >({});
-  const { onItemHover, isDragging } = useDrag();
+  const { onItemHover, isDragging, columns } = useDrag();
   const isMounted = useRef(false);
 
   const onFrameChange = (frame: LayoutRectangle, index: number, id: string) => {
@@ -66,7 +66,6 @@ export const SectionRow = <T extends object>({
         return;
       }
     }
-    setHoveredItem(null);
   };
 
   useAnimatedReaction(
@@ -131,6 +130,7 @@ export const SectionRow = <T extends object>({
               section={sectionId}
               rowIndex={rowIndex}
               onLayout={(frame) => onFrameChange(frame, index, row?.id || '-1')}
+              disabled={columns[index].disabled}
               canDropIn={hoveredItem === `${sectionId}-${index}`}
               parentView={parentView}
               draggingAreaStyle={draggingAreaStyle}

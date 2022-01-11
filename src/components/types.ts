@@ -103,11 +103,13 @@ export interface DraggableContextProps {
     id: string,
     frame: LayoutRectangle
   ) => void;
+  columns: Column[];
 }
 
 export interface Column {
   index: number;
   title: string;
+  disabled?: boolean;
   extraData?: Record<string, any>;
 }
 
@@ -156,6 +158,7 @@ export interface SectionRowProps<T> extends DraggableSectionRow<T> {
   cursorPositionX?: Animated.SharedValue<number>;
   columnWidth?: number;
   columnContentStyle?: ColumnContentStyle;
+  disabledColumns?: number[];
   onSectionEntered?: (sectionId: number) => void;
   onSectionExit?: (sectionId: number) => void;
   onItemEnter?: (sectionId: number, columnId: number) => void;
@@ -181,6 +184,7 @@ export interface DropInViewProps extends ItemStyled {
   rowIndex: number;
   row: any;
   parentView?: any;
+  disabled?: boolean;
   canDropIn?: boolean;
   onLayout?: (frame: LayoutRectangle, id: number) => void;
   draggingAreaStyle?: (

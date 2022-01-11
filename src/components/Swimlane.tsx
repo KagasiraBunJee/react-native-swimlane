@@ -36,6 +36,7 @@ import { SectionHeader } from './SectionHeader';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const DraggableContext = React.createContext<DraggableContextProps>({
+  columns: [],
   startDrag: noop,
   endDrag: noop,
   onItemHover: noop,
@@ -272,6 +273,7 @@ export const Swimlane = <T extends object>({
     },
     endDrag: () => {
       savePosition();
+
       offsetX.value = 0;
       offsetY.value = 0;
 
@@ -298,6 +300,7 @@ export const Swimlane = <T extends object>({
     isDragging,
     hoverStyle,
     children: _tempVal,
+    columns,
   };
 
   const onSectionFrame = (
