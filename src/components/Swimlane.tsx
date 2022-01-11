@@ -564,11 +564,6 @@ export const Swimlane = <T extends object>({
             scrollEnabled={horizontalScrollEnabled}
           >
             <View>
-              {floatingColumnHeaders && (
-                <View style={{ flexDirection: 'row' }}>
-                  {columns.map(renderColumnItem)}
-                </View>
-              )}
               <SectionList
                 ref={_sectionListRef}
                 sections={_testVal}
@@ -595,7 +590,10 @@ export const Swimlane = <T extends object>({
                     />
                   );
                 }}
-                style={styles.sectionList}
+                style={[
+                  styles.sectionList,
+                  floatingColumnHeaders ? { marginTop: 30 } : { marginTop: 0 },
+                ]}
                 keyExtractor={(item, index) => `${index}`}
                 renderSectionHeader={({ section }) => (
                   <SectionHeader
@@ -624,6 +622,11 @@ export const Swimlane = <T extends object>({
                   verticalContentMaxOffset.value = height;
                 }}
               />
+              {floatingColumnHeaders && (
+                <View style={styles.floatingHeaderContainer}>
+                  {columns.map(renderColumnItem)}
+                </View>
+              )}
             </View>
           </Animated.ScrollView>
           <Animated.View
@@ -643,6 +646,7 @@ const styles = StyleSheet.create({
   scrollView: { height: '100%' },
   shadowItem: { position: 'absolute' },
   shadowItemContent: { flexDirection: 'row' },
+  floatingHeaderContainer: { flexDirection: 'row', position: 'absolute' },
 });
 
 export const useDrag = () => React.useContext(DraggableContext);
