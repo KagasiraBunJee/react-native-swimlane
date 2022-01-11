@@ -19,6 +19,7 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
   section,
   row,
   rowIndex,
+  disabled = false,
   canDropIn = false,
   onLayout = noop,
   draggingAreaStyle,
@@ -136,6 +137,9 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
   }, [column, section, JSON.stringify(row), rowIndex]);
 
   useEffect(() => {
+    if (disabled) {
+      return;
+    }
     calcSize();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parentView, rootRef.current, column, section, endDrag, rowIndex]);

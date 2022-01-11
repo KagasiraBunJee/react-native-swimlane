@@ -103,12 +103,13 @@ export interface DraggableContextProps {
     id: string,
     frame: LayoutRectangle
   ) => void;
+  columns: Column[];
 }
 
 export interface Column {
   index: number;
   title: string;
-  canDropIn?: boolean;
+  disabled?: boolean;
   extraData?: Record<string, any>;
 }
 
@@ -183,6 +184,7 @@ export interface DropInViewProps extends ItemStyled {
   rowIndex: number;
   row: any;
   parentView?: any;
+  disabled?: boolean;
   canDropIn?: boolean;
   onLayout?: (frame: LayoutRectangle, id: number) => void;
   draggingAreaStyle?: (

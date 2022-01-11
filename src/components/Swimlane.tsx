@@ -36,6 +36,7 @@ import { SectionHeader } from './SectionHeader';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 const DraggableContext = React.createContext<DraggableContextProps>({
+  columns: [],
   startDrag: noop,
   endDrag: noop,
   onItemHover: noop,
@@ -150,16 +151,6 @@ export const Swimlane = <T extends object>({
       },
     };
   }, {});
-
-  const disabledColumns = columns.reduce(
-    (disabledColumnIndexes: number[], column) => {
-      if (!column.canDropIn) {
-        return [...disabledColumnIndexes, column.index];
-      }
-      return disabledColumnIndexes;
-    },
-    []
-  );
 
   const savePosition = () => {
     const targetPos = targetPositionRef?.current;
@@ -281,14 +272,7 @@ export const Swimlane = <T extends object>({
       verticalStartDragOffset.value = verticalOffset.value;
     },
     endDrag: () => {
-      const targetPos = targetPositionRef?.current;
-      const targetColumn = columns.find(
-        (column) => column.index === targetPos?.column
-      );
-
-      if (targetColumn?.canDropIn) {
-        savePosition();
-      }
+      savePosition();
 
       offsetX.value = 0;
       offsetY.value = 0;
@@ -316,6 +300,7 @@ export const Swimlane = <T extends object>({
     isDragging,
     hoverStyle,
     children: _tempVal,
+    columns,
   };
 
   const onSectionFrame = (
@@ -600,7 +585,6 @@ export const Swimlane = <T extends object>({
                     cursorPositionX={cursorPositionX}
                     columnWidth={columnWidth}
                     columnContentStyle={columnContentStyle}
-                    disabledColumns={disabledColumns}
                   />
                 );
               }}
