@@ -151,6 +151,16 @@ export const Swimlane = <T extends object>({
     };
   }, {});
 
+  const disabledColumns = columns.reduce(
+    (disabledColumnIndexes: number[], column) => {
+      if (!column.canDropIn) {
+        return [...disabledColumnIndexes, column.index];
+      }
+      return disabledColumnIndexes;
+    },
+    []
+  );
+
   const savePosition = () => {
     const targetPos = targetPositionRef?.current;
     const isSelf =
@@ -271,7 +281,15 @@ export const Swimlane = <T extends object>({
       verticalStartDragOffset.value = verticalOffset.value;
     },
     endDrag: () => {
-      savePosition();
+      const targetPos = targetPositionRef?.current;
+      const targetColumn = columns.find(
+        (column) => column.index === targetPos?.column
+      );
+
+      if (targetColumn?.canDropIn) {
+        savePosition();
+      }
+
       offsetX.value = 0;
       offsetY.value = 0;
 
@@ -582,6 +600,7 @@ export const Swimlane = <T extends object>({
                     cursorPositionX={cursorPositionX}
                     columnWidth={columnWidth}
                     columnContentStyle={columnContentStyle}
+                    disabledColumns={disabledColumns}
                   />
                 );
               }}

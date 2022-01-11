@@ -24,6 +24,7 @@ export const SectionRow = <T extends object>({
   parentView,
   columnWidth,
   columnContentStyle,
+  disabledColumns = [],
   cursorPositionX = { value: 0 },
   renderItem,
   emptyItem,
@@ -131,7 +132,10 @@ export const SectionRow = <T extends object>({
               section={sectionId}
               rowIndex={rowIndex}
               onLayout={(frame) => onFrameChange(frame, index, row?.id || '-1')}
-              canDropIn={hoveredItem === `${sectionId}-${index}`}
+              canDropIn={
+                hoveredItem === `${sectionId}-${index}` &&
+                !disabledColumns?.includes(index)
+              }
               parentView={parentView}
               draggingAreaStyle={draggingAreaStyle}
             >

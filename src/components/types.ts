@@ -108,6 +108,7 @@ export interface DraggableContextProps {
 export interface Column {
   index: number;
   title: string;
+  canDropIn?: boolean;
   extraData?: Record<string, any>;
 }
 
@@ -156,6 +157,7 @@ export interface SectionRowProps<T> extends DraggableSectionRow<T> {
   cursorPositionX?: Animated.SharedValue<number>;
   columnWidth?: number;
   columnContentStyle?: ColumnContentStyle;
+  disabledColumns?: number[];
   onSectionEntered?: (sectionId: number) => void;
   onSectionExit?: (sectionId: number) => void;
   onItemEnter?: (sectionId: number, columnId: number) => void;
