@@ -58,6 +58,7 @@ export default function App() {
         columns={data.columns}
         sections={data.sections}
         data={data.items}
+        floatingColumnHeaders
         emptyItem={() => {
           return (
             <View style={{ marginVertical: 10, height: 70, width: 70 }}>

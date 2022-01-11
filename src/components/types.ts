@@ -59,6 +59,7 @@ export interface ListProps<T> extends ItemRenderer<T> {
   verticalStartScrollBottomOffset?: number;
   horizontalStartScrollLeftOffset?: number;
   horizontalStartScrollRightOffset?: number;
+  floatingColumnHeaders?: boolean;
   renderSectionHeader: (section: any) => React.ReactNode;
   renderColumnItem: (column: Column, index: number) => React.ReactNode;
   onItemMoved: (

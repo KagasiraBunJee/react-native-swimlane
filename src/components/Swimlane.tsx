@@ -66,6 +66,7 @@ export const Swimlane = <T extends object>({
   horizontalStartScrollRightOffset = 100,
   verticalStartScrollBottomOffset = 100,
   verticalStartScrollTopOffset = 100,
+  floatingColumnHeaders = false,
   draggingAreaStyle,
   renderItem,
   emptyItem,
@@ -559,61 +560,68 @@ export const Swimlane = <T extends object>({
             }}
             scrollEnabled={horizontalScrollEnabled}
           >
-            <SectionList
-              ref={_sectionListRef}
-              sections={_testVal}
-              scrollEnabled={verticalScrollEnabled}
-              renderItem={({ item, index: rowIndex }) => {
-                return (
-                  <SectionRow
-                    cursorEntered={currentSectionRow?.includes(
-                      `${item.sectionId}-${rowIndex}`
-                    )}
-                    parentView={containerView}
-                    items={item.items}
-                    sectionId={item.sectionId}
-                    rowIndex={rowIndex}
-                    renderItem={renderItem}
-                    emptyItem={emptyItem}
-                    draggingAreaStyle={draggingAreaStyle}
-                    onFrame={(frame) =>
-                      onSectionFrame(item.sectionId, rowIndex, frame)
-                    }
-                    cursorPositionX={cursorPositionX}
-                    columnWidth={columnWidth}
-                    columnContentStyle={columnContentStyle}
-                  />
-                );
-              }}
-              style={styles.sectionList}
-              keyExtractor={(item, index) => `${index}`}
-              renderSectionHeader={({ section }) => (
-                <SectionHeader
-                  columns={columns}
-                  style={columnHeaderContainerStyle}
-                  index={section.index}
-                  renderColumnItem={renderColumnItem}
-                  onSectionPress={onSectionHeaderPress}
-                >
-                  {renderSectionHeader(section)}
-                </SectionHeader>
+            <View>
+              {floatingColumnHeaders && (
+                <View style={{ flexDirection: 'row' }}>
+                  {columns.map(renderColumnItem)}
+                </View>
               )}
-              stickySectionHeadersEnabled={false}
-              onScroll={({ nativeEvent }) => {
-                verticalOffset.value = nativeEvent.contentOffset.y;
-                const maxOffsetY =
-                  nativeEvent.contentSize.height -
-                  nativeEvent.layoutMeasurement.height;
-                verticalContentMaxOffset.value = maxOffsetY;
+              <SectionList
+                ref={_sectionListRef}
+                sections={_testVal}
+                scrollEnabled={verticalScrollEnabled}
+                renderItem={({ item, index: rowIndex }) => {
+                  return (
+                    <SectionRow
+                      cursorEntered={currentSectionRow?.includes(
+                        `${item.sectionId}-${rowIndex}`
+                      )}
+                      parentView={containerView}
+                      items={item.items}
+                      sectionId={item.sectionId}
+                      rowIndex={rowIndex}
+                      renderItem={renderItem}
+                      emptyItem={emptyItem}
+                      draggingAreaStyle={draggingAreaStyle}
+                      onFrame={(frame) =>
+                        onSectionFrame(item.sectionId, rowIndex, frame)
+                      }
+                      cursorPositionX={cursorPositionX}
+                      columnWidth={columnWidth}
+                      columnContentStyle={columnContentStyle}
+                    />
+                  );
+                }}
+                style={styles.sectionList}
+                keyExtractor={(item, index) => `${index}`}
+                renderSectionHeader={({ section }) => (
+                  <SectionHeader
+                    columns={floatingColumnHeaders ? [] : columns}
+                    style={columnHeaderContainerStyle}
+                    index={section.index}
+                    renderColumnItem={renderColumnItem}
+                    onSectionPress={onSectionHeaderPress}
+                  >
+                    {renderSectionHeader(section)}
+                  </SectionHeader>
+                )}
+                stickySectionHeadersEnabled={false}
+                onScroll={({ nativeEvent }) => {
+                  verticalOffset.value = nativeEvent.contentOffset.y;
+                  const maxOffsetY =
+                    nativeEvent.contentSize.height -
+                    nativeEvent.layoutMeasurement.height;
+                  verticalContentMaxOffset.value = maxOffsetY;
 
-                if (nativeEvent.contentOffset.y >= maxOffsetY) {
-                  verticalOffset.value = maxOffsetY;
-                }
-              }}
-              onContentSizeChange={(_, height) => {
-                verticalContentMaxOffset.value = height;
-              }}
-            />
+                  if (nativeEvent.contentOffset.y >= maxOffsetY) {
+                    verticalOffset.value = maxOffsetY;
+                  }
+                }}
+                onContentSizeChange={(_, height) => {
+                  verticalContentMaxOffset.value = height;
+                }}
+              />
+            </View>
           </Animated.ScrollView>
           <Animated.View
             pointerEvents="none"
