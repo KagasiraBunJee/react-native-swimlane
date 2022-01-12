@@ -130,7 +130,7 @@ export const SectionRow = <T extends object>({
               section={sectionId}
               rowIndex={rowIndex}
               onLayout={(frame) => onFrameChange(frame, index, row?.id || '-1')}
-              disabled={columns[index].disabled}
+              disabled={columns?.[index]?.disabled}
               canDropIn={hoveredItem === `${sectionId}-${index}`}
               parentView={parentView}
               draggingAreaStyle={draggingAreaStyle}
