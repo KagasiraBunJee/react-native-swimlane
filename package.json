@@ -1,6 +1,6 @@
 {
   "name": "react-native-swimlane",
-  "version": "2.3.2",
+  "version": "2.4.0",
   "description": "Swimlane",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
