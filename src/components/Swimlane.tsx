@@ -327,6 +327,7 @@ export const Swimlane = <T extends object>({
 
   const calcSectionHover = useCallback(
     (y: number) => {
+      console.log('calc');
       if (dragInfo) {
         const newY = enterCursorOffset.y + y;
         const el = find(

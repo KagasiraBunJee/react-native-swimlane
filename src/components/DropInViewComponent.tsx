@@ -3,14 +3,22 @@ import React, { useEffect, useRef } from 'react';
 import { LayoutRectangle, StyleSheet, View } from 'react-native';
 import Animated, {
   runOnJS,
+  runOnUI,
   useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
 } from 'react-native-reanimated';
 import type { DropInViewProps } from './types';
-import { PanGestureHandler } from 'react-native-gesture-handler';
+import {
+  Gesture,
+  GestureDetector,
+  GestureStateManager,
+  GestureType,
+  PanGestureHandler,
+} from 'react-native-gesture-handler';
 import { useDrag } from './Swimlane';
+import { useState } from 'react';
 
 export const DropInViewComponent: React.FC<DropInViewProps> = ({
   children,
@@ -43,6 +51,8 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
     children: _children,
   } = useDrag();
   const isMounted = useRef(false);
+  const [isDragging, setDragging] = useState(false);
+  const draggingEnabled = useSharedValue(false);
 
   const calcSize = () => {
     if (parentView && rootRef.current) {
@@ -151,27 +161,102 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
     };
   }, []);
 
+  const timerRef = useSharedValue<NodeJS.Timeout | null>(null);
+
+  const startLongPress = () => {
+    timerRef.value = setTimeout(() => {
+      draggingEnabled.value = true;
+      console.log('start move');
+    }, 1000);
+  };
+
+  const stopLongPress = () => {
+    draggingEnabled.value = false;
+    if (timerRef.value) {
+      console.log('clear timeout');
+      clearTimeout(timerRef.value);
+    }
+  };
+
+  console.log('rerender', column, section, rowIndex);
+
+  const panGesture = Gesture.Pan()
+    .onTouchesDown(() => {
+      console.log('touch down');
+      runOnJS(startLongPress)();
+    })
+    .onFinalize((e) => {
+      runOnJS(stopLongPress)();
+      console.log('finalize', e.state);
+    })
+    .onTouchesMove((e, manager) => {
+      // console.log('onTouchesDown');
+      // manager.fail();
+      if (!draggingEnabled.value) {
+        manager.fail();
+      }
+    })
+    .onStart(() => {
+      pressed.value = true;
+      runOnJS(prepareToDrag)();
+      startX.value = originFrame.value?.x || 0;
+      startY.value = originFrame.value?.y || 0;
+    })
+    .onUpdate(({ translationX, absoluteY, translationY, absoluteX }) => {
+      offsetX.value = translationX;
+      offsetY.value = translationY;
+
+      x.value = translationX;
+      y.value = translationY;
+
+      screenOffsetX.value = absoluteX;
+      screenOffsetY.value = absoluteY;
+    })
+    .onEnd(() => {
+      pressed.value = false;
+      x.value = 0;
+      y.value = 0;
+
+      offsetX.value = 0;
+      offsetY.value = 0;
+
+      runOnJS(endDrag)();
+      runOnJS(calcSize)();
+    });
+
   return (
-    <Animated.View>
-      {canDropIn && <View style={[styles.empty, hoverStyle]} />}
-      <View ref={rootRef}>
-        <Animated.View style={[animatedStyle]}>
-          <View>{children}</View>
-          {row && (
-            <PanGestureHandler onGestureEvent={eventHandler}>
-              <Animated.View
-                style={[
-                  styles.draggableView,
-                  draggingAreaStyle &&
-                    draggingAreaStyle(column, section, rowIndex),
-                ]}
-              />
-            </PanGestureHandler>
-          )}
-        </Animated.View>
-      </View>
-    </Animated.View>
+    <View ref={rootRef}>
+      {row ? (
+        <GestureDetector gesture={panGesture}>
+          <Animated.View style={[animatedStyle]}>{children}</Animated.View>
+        </GestureDetector>
+      ) : (
+        children
+      )}
+    </View>
   );
+
+  // return (
+  //   <Animated.View>
+  //     {canDropIn && <View style={[styles.empty, hoverStyle]} />}
+  //     <View ref={rootRef}>
+  //       <Animated.View style={[animatedStyle]}>
+  //         <View>{children}</View>
+  //         {row && (
+  //           <PanGestureHandler onGestureEvent={eventHandler}>
+  //             <Animated.View
+  //               style={[
+  //                 styles.draggableView,
+  //                 draggingAreaStyle &&
+  //                   draggingAreaStyle(column, section, rowIndex),
+  //               ]}
+  //             />
+  //           </PanGestureHandler>
+  //         )}
+  //       </Animated.View>
+  //     </View>
+  //   </Animated.View>
+  // );
 };
 
 const styles = StyleSheet.create({
