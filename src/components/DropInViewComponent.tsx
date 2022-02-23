@@ -93,7 +93,6 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
 
   const endDragWorklet = () => {
     'worklet';
-    console.log('end');
     cancelAnimation(shouldStart);
     startMoving.value = false;
     shouldStart.value = 0;

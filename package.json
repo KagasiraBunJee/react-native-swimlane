@@ -77,7 +77,8 @@
     "react-native": ">=0.64.0",
     "react-native-gesture-handler": ">=1.10.0",
     "react-native-reanimated": ">=2.2.0",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "@babel/preset-typescript": "^7.15.0"
   },
   "jest": {
     "preset": "react-native",
