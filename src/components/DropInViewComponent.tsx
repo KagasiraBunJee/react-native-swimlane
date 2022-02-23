@@ -4,9 +4,11 @@ import { LayoutRectangle, StyleSheet, View } from 'react-native';
 import Animated, {
   runOnJS,
   useAnimatedGestureHandler,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
+  cancelAnimation,
 } from 'react-native-reanimated';
 import type { DropInViewProps } from './types';
 import { PanGestureHandler } from 'react-native-gesture-handler';
@@ -43,6 +45,7 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
     children: _children,
   } = useDrag();
   const isMounted = useRef(false);
+  const childrenContainerRef = useRef<View | null>(null);
 
   const calcSize = () => {
     if (parentView && rootRef.current) {
@@ -86,26 +89,52 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
       noop
     );
   };
+  const onPressing = useSharedValue(0);
+
+  useAnimatedReaction(
+    () => {
+      return {
+        awaitTime: onPressing.value,
+      };
+    },
+    ({ awaitTime }) => {
+      if (awaitTime === 1) {
+        pressed.value = true;
+        runOnJS(prepareToDrag)();
+        startX.value = originFrame.value?.x || 0;
+        startY.value = originFrame.value?.y || 0;
+      }
+    }
+  );
+
+  const stopOnPressing = () => {
+    'worklet';
+    cancelAnimation(onPressing);
+    onPressing.value = 0;
+  };
 
   const eventHandler = useAnimatedGestureHandler({
+    onCancel: stopOnPressing,
+    onFinish: stopOnPressing,
+    onFail: stopOnPressing,
     onStart: () => {
-      pressed.value = true;
-      runOnJS(prepareToDrag)();
-      startX.value = originFrame.value?.x || 0;
-      startY.value = originFrame.value?.y || 0;
+      onPressing.value = withTiming(1, { duration: 200 });
     },
     onActive: (event) => {
-      offsetX.value = event.translationX;
-      offsetY.value = event.translationY;
+      if (onPressing.value === 1) {
+        offsetX.value = event.translationX;
+        offsetY.value = event.translationY;
 
-      x.value = event.translationX;
-      y.value = event.translationY;
+        x.value = event.translationX;
+        y.value = event.translationY;
 
-      screenOffsetX.value = event.absoluteX;
-      screenOffsetY.value = event.absoluteY;
+        screenOffsetX.value = event.absoluteX;
+        screenOffsetY.value = event.absoluteY;
+      }
     },
     onEnd: () => {
       pressed.value = false;
+      onPressing.value = 0;
       x.value = 0;
       y.value = 0;
 
@@ -156,7 +185,7 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
       {canDropIn && <View style={[styles.empty, hoverStyle]} />}
       <View ref={rootRef}>
         <Animated.View style={[animatedStyle]}>
-          <View>{children}</View>
+          <View ref={childrenContainerRef}>{children}</View>
           {row && (
             <PanGestureHandler onGestureEvent={eventHandler}>
               <Animated.View

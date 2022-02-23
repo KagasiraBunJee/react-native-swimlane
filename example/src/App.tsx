@@ -1,7 +1,13 @@
 import React, { useState } from 'react';
 import { useEffect } from 'react';
 
-import { StyleSheet, View, Text, SafeAreaView } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  Text,
+  SafeAreaView,
+  TouchableOpacity,
+} from 'react-native';
 import { Swimlane, Column, Section, KanbanItem } from 'react-native-swimlane';
 
 export default function App() {
@@ -86,7 +92,7 @@ export default function App() {
           //   (item) => item.column === column && item.section === section
           // )?.[row];
           return info ? (
-            <View
+            <TouchableOpacity
               style={{
                 backgroundColor: 'red',
                 marginVertical: 10,
@@ -98,7 +104,7 @@ export default function App() {
                 {column}-{section}-{row}
               </Text>
               <Text>{info.data.value}</Text>
-            </View>
+            </TouchableOpacity>
           ) : null;
         }}
         columnContentStyle={{ marginHorizontal: 13 }}
