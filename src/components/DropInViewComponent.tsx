@@ -2,8 +2,10 @@ import noop from 'lodash/noop';
 import React, { useEffect, useRef } from 'react';
 import { LayoutRectangle, StyleSheet, View } from 'react-native';
 import Animated, {
+  cancelAnimation,
   runOnJS,
   useAnimatedGestureHandler,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -29,6 +31,8 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
   const pressed = useSharedValue(false);
   const rootRef = useRef<View>(null);
   const originFrame = useSharedValue<LayoutRectangle | null>(null);
+  const shouldStart = useSharedValue(0);
+  const startMoving = useSharedValue(false);
   const {
     startDrag,
     endDrag,
@@ -87,12 +91,43 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
     );
   };
 
+  const endDragWorklet = () => {
+    'worklet';
+    cancelAnimation(shouldStart);
+    startMoving.value = false;
+    shouldStart.value = 0;
+    pressed.value = false;
+    x.value = 0;
+    y.value = 0;
+
+    offsetX.value = 0;
+    offsetY.value = 0;
+    runOnJS(endDrag)();
+    runOnJS(calcSize)();
+  };
+
+  useAnimatedReaction(
+    () => ({
+      startTime: shouldStart.value,
+      startMove: startMoving.value,
+    }),
+    ({ startTime, startMove }) => {
+      if (startTime === 1 && !startMove) {
+        startMoving.value = true;
+        pressed.value = true;
+        runOnJS(prepareToDrag)();
+        startX.value = originFrame.value?.x || 0;
+        startY.value = originFrame.value?.y || 0;
+      }
+    }
+  );
+
   const eventHandler = useAnimatedGestureHandler({
+    onCancel: endDragWorklet,
+    onFail: endDragWorklet,
+    onFinish: endDragWorklet,
     onStart: () => {
-      pressed.value = true;
-      runOnJS(prepareToDrag)();
-      startX.value = originFrame.value?.x || 0;
-      startY.value = originFrame.value?.y || 0;
+      shouldStart.value = withTiming(1, { duration: 200 });
     },
     onActive: (event) => {
       offsetX.value = event.translationX;
@@ -104,17 +139,7 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
       screenOffsetX.value = event.absoluteX;
       screenOffsetY.value = event.absoluteY;
     },
-    onEnd: () => {
-      pressed.value = false;
-      x.value = 0;
-      y.value = 0;
-
-      offsetX.value = 0;
-      offsetY.value = 0;
-
-      runOnJS(endDrag)();
-      runOnJS(calcSize)();
-    },
+    onEnd: endDragWorklet,
   });
 
   const animatedStyle = useAnimatedStyle(() => {
