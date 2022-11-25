@@ -69,7 +69,9 @@
   },
   "peerDependencies": {
     "react": "*",
-    "react-native": "*"
+    "react-native": "*",
+    "react-native-gesture-handler": "*",
+    "react-native-reanimated": "*"
   },
   "jest": {
     "preset": "react-native",
@@ -153,8 +155,7 @@
   "dependencies": {
     "@babel/preset-typescript": "^7.15.0",
     "lodash": "^4.17.21",
-    "react-native-gesture-handler": "^2.2.0",
-    "react-native-reanimated": "^2.4.1",
-    "react-native-safe-area-context": "^3.3.2"
+    "react-native-gesture-handler": "^2.8.0",
+    "react-native-reanimated": "^2.13.0"
   }
 }
