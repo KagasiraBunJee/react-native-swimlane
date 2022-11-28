@@ -46,7 +46,6 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
     hoverStyle,
     children: _children,
   } = useDrag();
-  const isMounted = useRef(false);
 
   const calcSize = () => {
     if (parentView && rootRef.current) {
@@ -168,13 +167,6 @@ export const DropInViewComponent: React.FC<DropInViewProps> = ({
     calcSize();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [parentView, rootRef.current, column, section, endDrag, rowIndex]);
-
-  useEffect(() => {
-    isMounted.current = true;
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
 
   return (
     <Animated.View>
